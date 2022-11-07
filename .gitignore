@@ -10,3 +10,4 @@
 
 .vscode
 /pppd/ppp
+/pppd/src/bindings.rs
