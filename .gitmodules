@@ -1,0 +1,3 @@
+[submodule "pppd/ppp"]
+	path = pppd/ppp
+	url = https://github.com/ppp-project/ppp
