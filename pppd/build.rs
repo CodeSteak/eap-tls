@@ -1,10 +1,8 @@
-use std::path::PathBuf;
-
 extern crate cc;
 extern crate bindgen;
 
-// cd ppp/pppd ;
 /* 
+cd ppp/pppd ;
 gcc 
 -DHAVE_CONFIG_H 
 -I. 
@@ -19,7 +17,7 @@ gcc
 auth.c cbcp.c ccp.c chap-md5.c chap-new.c chap_ms.c demand.c eap-tls.c eap.c ecp.c eui64.c fsm.c ipcp.c ipv6cp.c lcp.c magic.c main.c mppe.c options.c peap.c ppp-crypto.c ppp-des.c ppp-md4.c ppp-md5.c ppp-sha1.c pppcrypt.c session.c spinlock.c sys-linux.c tdb.c tls.c tty.c upap.c utils.c
 */
 
-const C_FILES : &'static str = "
+static C_FILES : &str = "
 auth.c cbcp.c ccp.c chap-md5.c 
 chap-new.c chap_ms.c demand.c eap-tls.c eap.c ecp.c eui64.c 
 fsm.c ipcp.c ipv6cp.c lcp.c magic.c mppe.c options.c 
@@ -56,12 +54,14 @@ fn build_ppp() {
         .define("PPPD_PLUGIN_DIR", Some("\"/usr/local/lib/pppd/2.4.10-dev\""));
 
     build
+        .flag("-Wno-deprecated-declarations") // ppp uses deprecated ssl functions
         .opt_level(2)
         .warnings(false)
         .debug(true);
 
     for c_file in C_FILES.split_whitespace() {
-        println!("cargo:rerun-if-changed=./ppp/pppd/{}", c_file);
+        // May cause recompliation because of autoconf output
+        // println!("cargo:rerun-if-changed=./ppp/pppd/{}", c_file);
         build.file(format!("./ppp/pppd/{}", c_file));
     }
 
