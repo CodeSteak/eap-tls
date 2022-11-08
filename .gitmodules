@@ -1,3 +1,6 @@
 [submodule "pppd/ppp"]
 	path = pppd/ppp
 	url = https://github.com/ppp-project/ppp
+[submodule "wifieap/hostap"]
+	path = wifieap/hostap
+	url = git://w1.fi/hostap.git
