@@ -29,9 +29,7 @@ fn main() {
     bindgen_hostap();
 }
 
-fn build_hostap() {
-    let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    
+fn build_hostap() {    
     Command::new("make")
         .current_dir(SOURCE_DIR)
         .status()
