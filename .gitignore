@@ -10,3 +10,4 @@
 
 .vscode
 /pppd/src/bindings.rs
+/wifieap/src/bindings.rs
