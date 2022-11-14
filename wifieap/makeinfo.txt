@@ -1,0 +1,478 @@
+for d in ap common crypto drivers eapol_auth eapol_supp eap_common eap_peer eap_server l2_packet p2p pae pasn radius rsn_supp tls utils wps fst; do [ -d $d ] && make -C $d; done
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/ap“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/accounting.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils accounting.c
+echo "  CC " accounting.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ap_config.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ap_config.c
+echo "  CC " ap_config.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ap_drv_ops.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ap_drv_ops.c
+echo "  CC " ap_drv_ops.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ap_list.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ap_list.c
+echo "  CC " ap_list.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ap_mlme.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ap_mlme.c
+echo "  CC " ap_mlme.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/airtime_policy.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils airtime_policy.c
+echo "  CC " airtime_policy.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/authsrv.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils authsrv.c
+echo "  CC " authsrv.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/beacon.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils beacon.c
+echo "  CC " beacon.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/bss_load.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils bss_load.c
+echo "  CC " bss_load.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ctrl_iface_ap.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ctrl_iface_ap.c
+echo "  CC " ctrl_iface_ap.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/dfs.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils dfs.c
+echo "  CC " dfs.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/dhcp_snoop.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils dhcp_snoop.c
+echo "  CC " dhcp_snoop.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/drv_callbacks.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils drv_callbacks.c
+echo "  CC " drv_callbacks.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/eap_user_db.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils eap_user_db.c
+echo "  CC " eap_user_db.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/eth_p_oui.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils eth_p_oui.c
+echo "  CC " eth_p_oui.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/gas_serv.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils gas_serv.c
+echo "  CC " gas_serv.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/hostapd.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils hostapd.c
+echo "  CC " hostapd.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/hs20.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils hs20.c
+echo "  CC " hs20.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/hw_features.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils hw_features.c
+echo "  CC " hw_features.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11_auth.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ieee802_11_auth.c
+echo "  CC " ieee802_11_auth.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ieee802_11.c
+echo "  CC " ieee802_11.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11_ht.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ieee802_11_ht.c
+echo "  CC " ieee802_11_ht.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11_shared.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ieee802_11_shared.c
+echo "  CC " ieee802_11_shared.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11_vht.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ieee802_11_vht.c
+echo "  CC " ieee802_11_vht.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_1x.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ieee802_1x.c
+echo "  CC " ieee802_1x.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/neighbor_db.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils neighbor_db.c
+echo "  CC " neighbor_db.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ndisc_snoop.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils ndisc_snoop.c
+echo "  CC " ndisc_snoop.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/p2p_hostapd.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils p2p_hostapd.c
+echo "  CC " p2p_hostapd.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/pmksa_cache_auth.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils pmksa_cache_auth.c
+echo "  CC " pmksa_cache_auth.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/preauth_auth.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils preauth_auth.c
+echo "  CC " preauth_auth.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/rrm.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils rrm.c
+echo "  CC " rrm.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/sta_info.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils sta_info.c
+echo "  CC " sta_info.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/tkip_countermeasures.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils tkip_countermeasures.c
+echo "  CC " tkip_countermeasures.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/utils.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils utils.c
+echo "  CC " utils.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/vlan.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils vlan.c
+echo "  CC " vlan.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/vlan_ifconfig.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils vlan_ifconfig.c
+echo "  CC " vlan_ifconfig.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/vlan_init.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils vlan_init.c
+echo "  CC " vlan_init.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wmm.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils wmm.c
+echo "  CC " wmm.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wnm_ap.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils wnm_ap.c
+echo "  CC " wnm_ap.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wpa_auth.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils wpa_auth.c
+echo "  CC " wpa_auth.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wpa_auth_ft.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils wpa_auth_ft.c
+echo "  CC " wpa_auth_ft.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wpa_auth_glue.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils wpa_auth_glue.c
+echo "  CC " wpa_auth_glue.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wpa_auth_ie.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils wpa_auth_ie.c
+echo "  CC " wpa_auth_ie.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wps_hostapd.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils wps_hostapd.c
+echo "  CC " wps_hostapd.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/x_snoop.o -DHOSTAPD -DNEED_AP_MLME -DCONFIG_ETH_P_OUI -DCONFIG_HS20 -DCONFIG_INTERWORKING -DCONFIG_IEEE80211R -DCONFIG_IEEE80211R_AP -DCONFIG_WPS -DCONFIG_PROXYARP -DCONFIG_IPV6 -DCONFIG_AIRTIME_POLICY  -I.. -I../utils x_snoop.c
+echo "  CC " x_snoop.c
+echo "  AR  libap.a"
+ar crT libap.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/accounting.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ap_config.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ap_drv_ops.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ap_list.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ap_mlme.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/airtime_policy.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/authsrv.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/beacon.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/bss_load.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ctrl_iface_ap.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/dfs.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/dhcp_snoop.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/drv_callbacks.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/eap_user_db.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/eth_p_oui.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/gas_serv.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/hostapd.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/hs20.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/hw_features.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11_auth.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11_ht.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11_shared.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_11_vht.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ieee802_1x.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/neighbor_db.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/ndisc_snoop.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/p2p_hostapd.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/pmksa_cache_auth.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/preauth_auth.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/rrm.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/sta_info.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/tkip_countermeasures.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/utils.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/vlan.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/vlan_ifconfig.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/vlan_init.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wmm.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wnm_ap.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wpa_auth.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wpa_auth_ft.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wpa_auth_glue.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wpa_auth_ie.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/wps_hostapd.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/ap/x_snoop.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/ap“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/common“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/gas.o -DCONFIG_IEEE80211R -DCONFIG_HS20 -DCONFIG_SAE -DCONFIG_SUITE -DCONFIG_SUITEB -DCONFIG_PTKSA_CACHE  -I.. -I../utils gas.c
+echo "  CC " gas.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/hw_features_common.o -DCONFIG_IEEE80211R -DCONFIG_HS20 -DCONFIG_SAE -DCONFIG_SUITE -DCONFIG_SUITEB -DCONFIG_PTKSA_CACHE  -I.. -I../utils hw_features_common.c
+echo "  CC " hw_features_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/ieee802_11_common.o -DCONFIG_IEEE80211R -DCONFIG_HS20 -DCONFIG_SAE -DCONFIG_SUITE -DCONFIG_SUITEB -DCONFIG_PTKSA_CACHE  -I.. -I../utils ieee802_11_common.c
+echo "  CC " ieee802_11_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/sae.o -DCONFIG_IEEE80211R -DCONFIG_HS20 -DCONFIG_SAE -DCONFIG_SUITE -DCONFIG_SUITEB -DCONFIG_PTKSA_CACHE  -I.. -I../utils sae.c
+echo "  CC " sae.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/ptksa_cache.o -DCONFIG_IEEE80211R -DCONFIG_HS20 -DCONFIG_SAE -DCONFIG_SUITE -DCONFIG_SUITEB -DCONFIG_PTKSA_CACHE  -I.. -I../utils ptksa_cache.c
+echo "  CC " ptksa_cache.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/wpa_common.o -DCONFIG_IEEE80211R -DCONFIG_HS20 -DCONFIG_SAE -DCONFIG_SUITE -DCONFIG_SUITEB -DCONFIG_PTKSA_CACHE  -I.. -I../utils wpa_common.c
+echo "  CC " wpa_common.c
+echo "  AR  libcommon.a"
+ar crT libcommon.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/gas.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/hw_features_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/ieee802_11_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/sae.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/ptksa_cache.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/common/wpa_common.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/common“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/crypto“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-cbc.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-cbc.c
+echo "  CC " aes-cbc.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-ccm.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-ccm.c
+echo "  CC " aes-ccm.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-ctr.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-ctr.c
+echo "  CC " aes-ctr.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-eax.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-eax.c
+echo "  CC " aes-eax.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-encblock.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-encblock.c
+echo "  CC " aes-encblock.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-gcm.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-gcm.c
+echo "  CC " aes-gcm.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-internal.c
+echo "  CC " aes-internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-internal-dec.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-internal-dec.c
+echo "  CC " aes-internal-dec.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-internal-enc.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-internal-enc.c
+echo "  CC " aes-internal-enc.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-omac1.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-omac1.c
+echo "  CC " aes-omac1.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-siv.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-siv.c
+echo "  CC " aes-siv.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-unwrap.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-unwrap.c
+echo "  CC " aes-unwrap.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-wrap.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils aes-wrap.c
+echo "  CC " aes-wrap.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/des-internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils des-internal.c
+echo "  CC " des-internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/dh_group5.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils dh_group5.c
+echo "  CC " dh_group5.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/dh_groups.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils dh_groups.c
+echo "  CC " dh_groups.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/md4-internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils md4-internal.c
+echo "  CC " md4-internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/md5.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils md5.c
+echo "  CC " md5.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/md5-internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils md5-internal.c
+echo "  CC " md5-internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/milenage.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils milenage.c
+echo "  CC " milenage.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ms_funcs.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils ms_funcs.c
+echo "  CC " ms_funcs.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/rc4.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils rc4.c
+echo "  CC " rc4.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha1.c
+echo "  CC " sha1.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha1-internal.c
+echo "  CC " sha1-internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-pbkdf2.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha1-pbkdf2.c
+echo "  CC " sha1-pbkdf2.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-prf.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha1-prf.c
+echo "  CC " sha1-prf.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-tlsprf.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha1-tlsprf.c
+echo "  CC " sha1-tlsprf.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-tprf.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha1-tprf.c
+echo "  CC " sha1-tprf.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha256.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha256.c
+echo "  CC " sha256.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha256-prf.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha256-prf.c
+echo "  CC " sha256-prf.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha256-tlsprf.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha256-tlsprf.c
+echo "  CC " sha256-tlsprf.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha256-internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha256-internal.c
+echo "  CC " sha256-internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha384.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha384.c
+echo "  CC " sha384.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha384-prf.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha384-prf.c
+echo "  CC " sha384-prf.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha384-internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha384-internal.c
+echo "  CC " sha384-internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha512.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha512.c
+echo "  CC " sha512.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha512-prf.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha512-prf.c
+echo "  CC " sha512-prf.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha512-internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils sha512-internal.c
+echo "  CC " sha512-internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/crypto_internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils crypto_internal.c
+echo "  CC " crypto_internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/crypto_internal-cipher.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils crypto_internal-cipher.c
+echo "  CC " crypto_internal-cipher.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/crypto_internal-modexp.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils crypto_internal-modexp.c
+echo "  CC " crypto_internal-modexp.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/crypto_internal-rsa.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils crypto_internal-rsa.c
+echo "  CC " crypto_internal-rsa.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/tls_internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils tls_internal.c
+echo "  CC " tls_internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/fips_prf_internal.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils fips_prf_internal.c
+echo "  CC " fips_prf_internal.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/random.o -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLS_INTERNAL_CLIENT -DCONFIG_TLS_INTERNAL_SERVER -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_HMAC_SHA384_KDF -DCONFIG_INTERNAL_SHA384  -I.. -I../utils random.c
+echo "  CC " random.c
+echo "  AR  libcrypto.a"
+ar crT libcrypto.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-cbc.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-ccm.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-ctr.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-eax.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-encblock.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-gcm.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-internal-dec.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-internal-enc.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-omac1.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-siv.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-unwrap.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/aes-wrap.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/des-internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/dh_group5.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/dh_groups.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/md4-internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/md5.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/md5-internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/milenage.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/ms_funcs.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/rc4.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-pbkdf2.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-prf.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-tlsprf.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha1-tprf.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha256.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha256-prf.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha256-tlsprf.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha256-internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha384.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha384-prf.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha384-internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha512.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha512-prf.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/sha512-internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/crypto_internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/crypto_internal-cipher.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/crypto_internal-modexp.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/crypto_internal-rsa.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/tls_internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/fips_prf_internal.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/crypto/random.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/crypto“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/drivers“ wird betreten
+echo Nothing to be made.
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/drivers“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eapol_auth“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_auth /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_auth/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_auth/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_auth/eapol_auth_sm.o -MMD -O2 -Wall -g  -I.. -I../utils eapol_auth_sm.c
+echo "  CC " eapol_auth_sm.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_auth/eapol_auth_dump.o -MMD -O2 -Wall -g  -I.. -I../utils eapol_auth_dump.c
+echo "  CC " eapol_auth_dump.c
+echo "  AR  libeapol_auth.a"
+ar crT libeapol_auth.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_auth/eapol_auth_sm.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_auth/eapol_auth_dump.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eapol_auth“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eapol_supp“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_supp /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_supp/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_supp/eapol_supp_sm.o -DIEEE8021X_EAPOL  -I.. -I../utils eapol_supp_sm.c
+echo "  CC " eapol_supp_sm.c
+echo "  AR  libeapol_supp.a"
+ar crT libeapol_supp.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eapol_supp/eapol_supp_sm.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eapol_supp“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eap_common“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/chap.o -MMD -O2 -Wall -g  -I.. -I../utils chap.c
+echo "  CC " chap.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_common.c
+echo "  CC " eap_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_eke_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_eke_common.c
+echo "  CC " eap_eke_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_fast_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_fast_common.c
+echo "  CC " eap_fast_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_gpsk_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_gpsk_common.c
+echo "  CC " eap_gpsk_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_ikev2_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_ikev2_common.c
+echo "  CC " eap_ikev2_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_pax_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_pax_common.c
+echo "  CC " eap_pax_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_peap_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_peap_common.c
+echo "  CC " eap_peap_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_psk_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_psk_common.c
+echo "  CC " eap_psk_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_pwd_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_pwd_common.c
+echo "  CC " eap_pwd_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_sake_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_sake_common.c
+echo "  CC " eap_sake_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_sim_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_sim_common.c
+echo "  CC " eap_sim_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_wsc_common.o -MMD -O2 -Wall -g  -I.. -I../utils eap_wsc_common.c
+echo "  CC " eap_wsc_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ikev2_common.o -MMD -O2 -Wall -g  -I.. -I../utils ikev2_common.c
+echo "  CC " ikev2_common.c
+echo "  AR  libeap_common.a"
+ar crT libeap_common.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/chap.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_eke_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_fast_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_gpsk_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_ikev2_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_pax_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_peap_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_psk_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_pwd_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_sake_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_sim_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/eap_wsc_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_common/ikev2_common.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eap_common“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eap_peer“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_peer /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_peer/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_peer/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_peer/eap.o -DIEEE8021X_EAPOL  -I.. -I../utils eap.c
+echo "  CC " eap.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_peer/eap_methods.o -DIEEE8021X_EAPOL  -I.. -I../utils eap_methods.c
+echo "  CC " eap_methods.c
+echo "  AR  libeap_peer.a"
+ar crT libeap_peer.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_peer/eap.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_peer/eap_methods.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eap_peer“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eap_server“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server/eap_server.o -DCONFIG_HS20  -I.. -I../utils eap_server.c
+echo "  CC " eap_server.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server/eap_server_identity.o -DCONFIG_HS20  -I.. -I../utils eap_server_identity.c
+echo "  CC " eap_server_identity.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server/eap_server_methods.o -DCONFIG_HS20  -I.. -I../utils eap_server_methods.c
+echo "  CC " eap_server_methods.c
+echo "  AR  libeap_server.a"
+ar crT libeap_server.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server/eap_server.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server/eap_server_identity.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/eap_server/eap_server_methods.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/eap_server“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/l2_packet“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/l2_packet /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/l2_packet/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/l2_packet/l2_packet_linux.o -MMD -O2 -Wall -g  -I.. -I../utils l2_packet_linux.c
+echo "  CC " l2_packet_linux.c
+echo "  AR  libl2_packet.a"
+ar crT libl2_packet.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/l2_packet/l2_packet_linux.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/l2_packet“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/p2p“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_build.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p_build.c
+echo "  CC " p2p_build.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p.c
+echo "  CC " p2p.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_dev_disc.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p_dev_disc.c
+echo "  CC " p2p_dev_disc.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_go_neg.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p_go_neg.c
+echo "  CC " p2p_go_neg.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_group.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p_group.c
+echo "  CC " p2p_group.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_invitation.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p_invitation.c
+echo "  CC " p2p_invitation.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_parse.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p_parse.c
+echo "  CC " p2p_parse.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_pd.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p_pd.c
+echo "  CC " p2p_pd.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_sd.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p_sd.c
+echo "  CC " p2p_sd.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_utils.o -DCONFIG_WIFI_DISPLAY -DCONFIG_WPS_NFC  -I.. -I../utils p2p_utils.c
+echo "  CC " p2p_utils.c
+echo "  AR  libp2p.a"
+ar crT libp2p.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_build.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_dev_disc.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_go_neg.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_group.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_invitation.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_parse.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_pd.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_sd.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/p2p/p2p_utils.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/p2p“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/pae“ wird betreten
+echo Nothing to be made.
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/pae“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/pasn“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/pasn /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/pasn/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/pasn/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/pasn/pasn_initiator.o -DCONFIG_SAE -DCONFIG_FILS -DIEEE8021X_EAPOL -DCONFIG_IEEE80211R -DCONFIG_TESTING_OPTIONS -DCONFIG_SAE_PK -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_SHA512 -DCONFIG_PASN  -I.. -I../utils pasn_initiator.c
+echo "  CC " pasn_initiator.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/pasn/pasn_responder.o -DCONFIG_SAE -DCONFIG_FILS -DIEEE8021X_EAPOL -DCONFIG_IEEE80211R -DCONFIG_TESTING_OPTIONS -DCONFIG_SAE_PK -DCONFIG_SHA256 -DCONFIG_SHA384 -DCONFIG_SHA512 -DCONFIG_PASN  -I.. -I../utils pasn_responder.c
+echo "  CC " pasn_responder.c
+echo "  AR  libpasn.a"
+ar crT libpasn.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/pasn/pasn_initiator.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/pasn/pasn_responder.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/pasn“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/radius“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/radius.o -DCONFIG_IPV6  -I.. -I../utils radius.c
+echo "  CC " radius.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/radius_client.o -DCONFIG_IPV6  -I.. -I../utils radius_client.c
+echo "  CC " radius_client.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/radius_das.o -DCONFIG_IPV6  -I.. -I../utils radius_das.c
+echo "  CC " radius_das.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/radius_server.o -DCONFIG_IPV6  -I.. -I../utils radius_server.c
+echo "  CC " radius_server.c
+echo "  AR  libradius.a"
+ar crT libradius.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/radius.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/radius_client.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/radius_das.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/radius/radius_server.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/radius“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/rsn_supp“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/pmksa_cache.o -DCONFIG_IEEE80211R -DCONFIG_TDLS -DCONFIG_WNM -DIEEE8021X_EAPOL  -I.. -I../utils pmksa_cache.c
+echo "  CC " pmksa_cache.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/wpa_ft.o -DCONFIG_IEEE80211R -DCONFIG_TDLS -DCONFIG_WNM -DIEEE8021X_EAPOL  -I.. -I../utils wpa_ft.c
+echo "  CC " wpa_ft.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/tdls.o -DCONFIG_IEEE80211R -DCONFIG_TDLS -DCONFIG_WNM -DIEEE8021X_EAPOL  -I.. -I../utils tdls.c
+echo "  CC " tdls.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/preauth.o -DCONFIG_IEEE80211R -DCONFIG_TDLS -DCONFIG_WNM -DIEEE8021X_EAPOL  -I.. -I../utils preauth.c
+echo "  CC " preauth.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/wpa.o -DCONFIG_IEEE80211R -DCONFIG_TDLS -DCONFIG_WNM -DIEEE8021X_EAPOL  -I.. -I../utils wpa.c
+echo "  CC " wpa.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/wpa_ie.o -DCONFIG_IEEE80211R -DCONFIG_TDLS -DCONFIG_WNM -DIEEE8021X_EAPOL  -I.. -I../utils wpa_ie.c
+echo "  CC " wpa_ie.c
+echo "  AR  librsn_supp.a"
+ar crT librsn_supp.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/pmksa_cache.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/wpa_ft.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/tdls.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/preauth.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/wpa.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/rsn_supp/wpa_ie.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/rsn_supp“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/tls“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/asn1.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils asn1.c
+echo "  CC " asn1.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/bignum.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils bignum.c
+echo "  CC " bignum.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/pkcs1.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils pkcs1.c
+echo "  CC " pkcs1.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/pkcs5.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils pkcs5.c
+echo "  CC " pkcs5.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/pkcs8.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils pkcs8.c
+echo "  CC " pkcs8.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/rsa.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils rsa.c
+echo "  CC " rsa.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_client.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_client.c
+echo "  CC " tlsv1_client.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_client_read.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_client_read.c
+echo "  CC " tlsv1_client_read.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_client_write.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_client_write.c
+echo "  CC " tlsv1_client_write.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_client_ocsp.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_client_ocsp.c
+echo "  CC " tlsv1_client_ocsp.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_common.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_common.c
+echo "  CC " tlsv1_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_cred.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_cred.c
+echo "  CC " tlsv1_cred.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_record.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_record.c
+echo "  CC " tlsv1_record.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_server.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_server.c
+echo "  CC " tlsv1_server.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_server_read.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_server_read.c
+echo "  CC " tlsv1_server_read.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_server_write.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils tlsv1_server_write.c
+echo "  CC " tlsv1_server_write.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/x509v3.o -DCONFIG_INTERNAL_LIBTOMMATH -DCONFIG_CRYPTO_INTERNAL -DCONFIG_TLSV11 -DCONFIG_TLSV12  -I.. -I../utils x509v3.c
+echo "  CC " x509v3.c
+echo "  AR  libtls.a"
+ar crT libtls.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/asn1.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/bignum.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/pkcs1.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/pkcs5.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/pkcs8.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/rsa.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_client.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_client_read.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_client_write.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_client_ocsp.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_cred.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_record.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_server.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_server_read.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/tlsv1_server_write.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/tls/x509v3.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/tls“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/utils“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/base64.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils base64.c
+echo "  CC " base64.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/bitfield.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils bitfield.c
+echo "  CC " bitfield.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/common.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils common.c
+echo "  CC " common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/config.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils config.c
+echo "  CC " config.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/crc32.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils crc32.c
+echo "  CC " crc32.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ip_addr.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils ip_addr.c
+echo "  CC " ip_addr.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/json.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils json.c
+echo "  CC " json.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/radiotap.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils radiotap.c
+echo "  CC " radiotap.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/trace.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils trace.c
+echo "  CC " trace.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/uuid.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils uuid.c
+echo "  CC " uuid.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/wpa_debug.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils wpa_debug.c
+echo "  CC " wpa_debug.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/wpabuf.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils wpabuf.c
+echo "  CC " wpabuf.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/os_unix.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils os_unix.c
+echo "  CC " os_unix.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/eloop.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils eloop.c
+echo "  CC " eloop.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/edit.o -DCONFIG_IPV6 -DCONFIG_DEBUG_FILE  -I.. -I../utils edit.c
+echo "  CC " edit.c
+echo "  AR  libutils.a"
+ar crT libutils.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/base64.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/bitfield.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/config.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/crc32.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/ip_addr.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/json.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/radiotap.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/trace.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/uuid.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/wpa_debug.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/wpabuf.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/os_unix.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/eloop.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/utils/edit.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/utils“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/wps“ wird betreten
+mkdir -p /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/http_client.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils http_client.c
+echo "  CC " http_client.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/httpread.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils httpread.c
+echo "  CC " httpread.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/http_server.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils http_server.c
+echo "  CC " http_server.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ndef.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils ndef.c
+echo "  CC " ndef.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/upnp_xml.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils upnp_xml.c
+echo "  CC " upnp_xml.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_attr_build.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_attr_build.c
+echo "  CC " wps_attr_build.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_attr_parse.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_attr_parse.c
+echo "  CC " wps_attr_parse.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_attr_process.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_attr_process.c
+echo "  CC " wps_attr_process.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps.c
+echo "  CC " wps.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_common.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_common.c
+echo "  CC " wps_common.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_dev_attr.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_dev_attr.c
+echo "  CC " wps_dev_attr.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_enrollee.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_enrollee.c
+echo "  CC " wps_enrollee.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_er.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_er.c
+echo "  CC " wps_er.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_er_ssdp.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_er_ssdp.c
+echo "  CC " wps_er_ssdp.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_module_tests.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_module_tests.c
+echo "  CC " wps_module_tests.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_registrar.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_registrar.c
+echo "  CC " wps_registrar.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp_ap.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_upnp_ap.c
+echo "  CC " wps_upnp_ap.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_upnp.c
+echo "  CC " wps_upnp.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp_event.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_upnp_event.c
+echo "  CC " wps_upnp_event.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp_ssdp.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_upnp_ssdp.c
+echo "  CC " wps_upnp_ssdp.c
+cc -c -o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp_web.o -DCONFIG_P2P -DCONFIG_WPS_OOB -DCONFIG_WPS_NFC  -I.. -I../utils wps_upnp_web.c
+echo "  CC " wps_upnp_web.c
+echo "  AR  libwps.a"
+ar crT libwps.a /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/http_client.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/httpread.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/http_server.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/ndef.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/upnp_xml.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_attr_build.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_attr_parse.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_attr_process.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_common.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_dev_attr.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_enrollee.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_er.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_er_ssdp.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_module_tests.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_registrar.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp_ap.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp_event.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp_ssdp.o /home/robin/workspace/rust/eaptls/wifieap/hostap/build/src/wps/wps_upnp_web.o
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/wps“ wird verlassen
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/fst“ wird betreten
+echo Nothing to be made.
+make[1]: Verzeichnis „/home/robin/workspace/rust/eaptls/wifieap/hostap/src/fst“ wird verlassen
