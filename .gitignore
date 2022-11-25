@@ -9,5 +9,5 @@
 **/*.rs.bk
 
 .vscode
-/pppd/src/bindings.rs
-/wifieap/src/bindings.rs
+/pppd/src/bindings*
+/wifieap/src/bindings*

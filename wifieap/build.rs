@@ -36,19 +36,6 @@ fn build_hostap() {
         .expect("Failed running make to build");
 
     for sublib in SOURCE_LIBS {
-        /*let libfile = format!("lib{sublib}.a");
-
-        let src = PathBuf::from(SOURCE_DIR)
-            .join(sublib)
-            .join(&libfile);
-
-        let dest = out_path.join(&libfile);
-
-        dbg!(&src);
-        dbg!(&dest);
-
-        std::fs::copy(src, dest).expect("Failed coping lib");*/
-
         let search =  std::fs::canonicalize(
             PathBuf::from(SOURCE_DIR)
                 .join(sublib)
@@ -60,20 +47,25 @@ fn build_hostap() {
 }
 
 fn bindgen_hostap() {
-    //let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-
-    println!("cargo:rerun-if-changed=header.h");
-
     let builder = bindgen::Builder::default()
         .clang_arg(format!("-I{SOURCE_DIR}"))
         .clang_arg(format!("-I{SOURCE_DIR}utils"))
         .clang_arg(format!("-I{SOURCE_DIR}../"))
         .clang_arg("-DIEEE8021X_EAPOL");
 
-
-    builder.header("header.h")
+    println!("cargo:rerun-if-changed=header_peer.h");
+    builder.clone()
+        .header("header_peer.h")
         .generate()
         .expect("Unable to generate bindings")
-        .write_to_file("src/bindings.rs")
+        .write_to_file("src/bindings_peer.rs")
+        .expect("Couldn't write bindings!");
+
+    println!("cargo:rerun-if-changed=header_server.h");
+    builder.clone()
+        .header("header_server.h")
+        .generate()
+        .expect("Unable to generate bindings")
+        .write_to_file("src/bindings_server.rs")
         .expect("Couldn't write bindings!");
 }
