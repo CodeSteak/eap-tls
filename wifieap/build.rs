@@ -62,7 +62,7 @@ fn bindgen_hostap() {
         .expect("Couldn't write bindings!");
 
     println!("cargo:rerun-if-changed=header_server.h");
-    builder.clone()
+    builder
         .header("header_server.h")
         .generate()
         .expect("Unable to generate bindings")
