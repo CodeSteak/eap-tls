@@ -1,7 +1,9 @@
 
-use std::{collections::HashMap, ffi::{c_int, CStr, c_void}};
+use std::{collections::HashMap, ffi::{c_int, CStr, c_void}, sync::Once};
 pub use crate::bindings_peer::*;
+use crate::util;
 
+static PEER_INIT: Once = Once::new();
 
 enum EapPeerResult {
     Respond(Vec<u8>),
@@ -22,7 +24,13 @@ pub struct EapPeer {
 }
 
 impl EapPeer {
-    fn new() -> Box<Self> {
+    pub fn new() -> Box<Self> {
+        PEER_INIT.call_once(|| {
+            unsafe {
+                assert!(eap_peer_mschapv2_register() == 0);
+            }
+        });
+
         // ! BOX, should not be moved 
         let callbacks : Box<eapol_callbacks> = Box::new(eapol_callbacks { 
             get_config: Some(Self::get_config), 
@@ -41,8 +49,17 @@ impl EapPeer {
             set_anon_id: None 
         });
 
-        let peer_config : Box<eap_peer_config> = Box::new(unsafe { std::mem::zeroed() });
+        let mut peer_config : Box<eap_peer_config> = Box::new(unsafe { std::mem::zeroed() });
         let config : Box<eap_config> = Box::new(unsafe { std::mem::zeroed() });
+
+        let username = "user";
+        let password = "password";
+        
+        unsafe {
+            ((*peer_config).identity, (*peer_config).identity_len) = util::malloc_str(username);
+            ((*peer_config).password, (*peer_config).password_len) = util::malloc_str(password);
+        }
+
         let wpabuf : *mut wpabuf = unsafe { wpabuf_alloc(0) };
         assert!(!wpabuf.is_null());
 
@@ -73,7 +90,7 @@ impl EapPeer {
         me
     }
 
-    fn step(&mut self) -> Option<Vec<u8>> {
+    pub fn step(&mut self) -> Option<Vec<u8>> {
         let mut ret = None;
         let _state_changed = unsafe { eap_peer_sm_step(self.state) } == 1;
 
@@ -105,14 +122,17 @@ impl EapPeer {
         ret
     }
 
-    fn receive(&mut self, input : &[u8]) {
-        self.state_bool.insert(eapol_bool_var_EAPOL_eapResp, true);
+    pub fn receive(&mut self, input : &[u8]) {
+        self.state_bool.insert(eapol_bool_var_EAPOL_eapReq, true);
+        unsafe {
+            wpabuf_free(self.wpabuf);
+        }
+
         self.wpabuf = unsafe {
             wpabuf_alloc_copy(input.as_ptr() as *const c_void, input.len())
         };
 
     }
-
 
     unsafe extern "C" fn get_config(ctx : *mut c_void) -> *mut eap_peer_config {
         let eap = &mut *(ctx as *mut Self);

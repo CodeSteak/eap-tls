@@ -1,12 +1,16 @@
-use std::{collections::HashMap, ffi::{c_int, CStr, c_void}};
+use std::{collections::HashMap, ffi::{c_int, CStr, c_void}, sync::Once};
 pub use crate::bindings_server::*;
+use crate::util;
 
+
+static SERVER_INIT: Once = Once::new();
 
 pub struct EapServerStepResult {
     pub response : Option<Vec<u8>>,
     pub status : EapStatus,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum EapStatus {
     Ok,
     Finished,
@@ -22,8 +26,14 @@ pub struct EapServer {
 }
 
 impl EapServer {
-    fn new() -> Box<Self> {
+    pub fn new() -> Box<Self> {
         // TODO: Init TLS
+        SERVER_INIT.call_once(|| {
+            unsafe {
+                assert!(eap_server_identity_register() == 0);
+                assert!(eap_server_mschapv2_register() == 0);
+            }
+        });
 
         let callbacks : eapol_callbacks = eapol_callbacks {
             get_eap_user: Some(Self::server_get_eap_user),
@@ -66,11 +76,28 @@ impl EapServer {
             (*me.interface).portEnabled = true;
             (*me.interface).eapRestart = true;
         }
-        unimplemented!()
+
+        me
 
     }
 
-    fn step(&mut self) -> EapServerStepResult{
+    pub fn receive(&mut self, buffer : &[u8]) {
+        /*
+        wpabuf_free(eap_ctx.eap_if->eapRespData);
+	eap_ctx.eap_if->eapRespData = wpabuf_alloc_copy(data, data_len);
+	if (eap_ctx.eap_if->eapRespData)
+		eap_ctx.eap_if->eapResp = true;
+        */
+        unsafe {
+            wpabuf_free(
+                (*self.interface).eapRespData
+            );
+            (*self.interface).eapRespData = wpabuf_alloc_copy(buffer.as_ptr() as *const c_void, buffer.len());
+            (*self.interface).eapResp = true;
+        }
+    }
+
+    pub fn step(&mut self) -> EapServerStepResult{
         let _state_changed = unsafe { eap_server_sm_step(self.state) } == 1;
 
         let sent_message = unsafe { (*self.interface).eapReq };
@@ -85,8 +112,9 @@ impl EapServer {
             EapStatus::Ok
         };
 
-        if sent_message || finished || failed && unsafe { (*self.interface).eapRespData.is_null() } {
-            let data = unsafe { (*self.interface).eapRespData };
+        let buffer_filled = unsafe { !(*self.interface).eapReqData.is_null() };
+        if (sent_message || finished || failed) && buffer_filled  {
+            let data = unsafe { (*self.interface).eapReqData };
             let data = unsafe { std::slice::from_raw_parts((*data).buf, (*data).used) }.to_vec();
             
             EapServerStepResult {
@@ -103,21 +131,51 @@ impl EapServer {
     }
 
     unsafe extern "C"  fn server_get_eap_user(ctx : *mut c_void, identity : *const u8, identity_len : usize,  phase2 : c_int, user : *mut eap_user) -> i32 {
-        unimplemented!()
+        // NOTE: 
+        // user seems to get freed automaticly via `eap_user_free`.
+
+        unsafe {*user =  std::mem::zeroed();}
+
+        if phase2 == 0 {
+            unsafe {
+                // Not sure what this does :/
+                (*user).methods[0].vendor = EAP_VENDOR_IETF as _;
+                (*user).methods[0].method = eap_type_EAP_TYPE_PEAP;
+            }
+            return 0;
+        } 
+
+        /*
+        Optional check for username
+        if (identity_len != 4 || identity == NULL ||
+            os_memcmp(identity, "user", 4) != 0) {
+            printf("Unknown user\n");
+            return -1;
+	    }
+        */
+
+        /* Only allow EAP-MSCHAPv2 as the Phase 2 method */
+        unsafe {
+            (*user).methods[0].vendor = EAP_VENDOR_IETF as _;
+            (*user).methods[0].method = eap_type_EAP_TYPE_MSCHAPV2;
+            let password = "password";
+            ((*user).password, (*user).password_len) = util::malloc_str(password);
+        }
+        
+        0
     }
 
     unsafe extern "C" fn get_eap_req_id_text(ctx : *mut c_void, len : *mut usize) -> *const i8 {
         *len = 0;
         std::ptr::null()
     }
-
-
 }
 
 impl Drop for EapServer {
     fn drop(&mut self) {
-        
-        // TODO : More cleanup
-        unimplemented!()
+        unsafe {
+            eap_server_sm_deinit(self.state);
+        }
+        // TODO : More cleanup ???
     }
 }
