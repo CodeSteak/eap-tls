@@ -31,7 +31,7 @@ impl EapServer {
         SERVER_INIT.call_once(|| {
             unsafe {
                 assert!(eap_server_identity_register() == 0);
-                assert!(eap_server_mschapv2_register() == 0);
+                assert!(eap_server_md5_register() == 0);
             }
         });
 
@@ -104,6 +104,13 @@ impl EapServer {
         let finished = unsafe { (*self.interface).eapSuccess };
         let failed = unsafe { (*self.interface).eapFail };
 
+        // clear flags
+        unsafe {
+            (*self.interface).eapReq = false;
+            (*self.interface).eapSuccess = false;
+            (*self.interface).eapFail = false;
+        }
+
         let status = if failed {
             EapStatus::Failed
         } else if finished {
@@ -134,13 +141,17 @@ impl EapServer {
         // NOTE: 
         // user seems to get freed automaticly via `eap_user_free`.
 
+        dbg!();
+
         unsafe {*user =  std::mem::zeroed();}
+
+        dbg!(phase2);
 
         if phase2 == 0 {
             unsafe {
                 // Not sure what this does :/
                 (*user).methods[0].vendor = EAP_VENDOR_IETF as _;
-                (*user).methods[0].method = eap_type_EAP_TYPE_PEAP;
+                (*user).methods[0].method = eap_type_EAP_TYPE_MD5;
             }
             return 0;
         } 
@@ -154,10 +165,11 @@ impl EapServer {
 	    }
         */
 
-        /* Only allow EAP-MSCHAPv2 as the Phase 2 method */
+        /* Only allow EAP-MD5 as the Phase 2 method */
         unsafe {
             (*user).methods[0].vendor = EAP_VENDOR_IETF as _;
-            (*user).methods[0].method = eap_type_EAP_TYPE_MSCHAPV2;
+            (*user).methods[0].method = eap_type_EAP_TYPE_MD5;
+            
             let password = "password";
             ((*user).password, (*user).password_len) = util::malloc_str(password);
         }

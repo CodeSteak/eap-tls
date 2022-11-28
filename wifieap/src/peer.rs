@@ -27,7 +27,8 @@ impl EapPeer {
     pub fn new() -> Box<Self> {
         PEER_INIT.call_once(|| {
             unsafe {
-                assert!(eap_peer_mschapv2_register() == 0);
+                //assert!(eap_peer_mschapv2_register() == 0);
+                assert!(eap_peer_md5_register() == 0);
             }
         });
 
@@ -86,6 +87,8 @@ impl EapPeer {
             )
         };
         assert!(!me.state.is_null());
+
+        me.state_bool.insert(eapol_bool_var_EAPOL_portEnabled, true);
 
         me
     }
