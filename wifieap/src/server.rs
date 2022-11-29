@@ -22,7 +22,6 @@ pub struct EapServer {
     callbacks : eapol_callbacks,
     eap_config : eap_config,
     state : *mut eap_sm,
-    session : eap_session_data,
 }
 
 impl EapServer {
@@ -47,15 +46,12 @@ impl EapServer {
 
         let mut eap_config : eap_config = unsafe { std::mem::zeroed() };
         eap_config.eap_server = 1;
-
-        let mut eap_session = unsafe { std::mem::zeroed() };
         
         let mut me = Box::new(Self {
             interface: std::ptr::null_mut(),
             callbacks,
             eap_config,
             state: std::ptr::null_mut(),
-            session: eap_session
         });
         
         me.state = unsafe { 
@@ -66,15 +62,14 @@ impl EapServer {
                 me_ptr, 
                 callback_ptr, 
                 &mut me.eap_config, 
-                &mut me.session, 
             )
         };
         assert!(!me.state.is_null());
 
         me.interface = unsafe { eap_get_interface(me.state) };
         unsafe {
-            (*me.interface).portEnabled = true;
-            (*me.interface).eapRestart = true;
+            (*me.interface).portEnabled = true as _;
+            (*me.interface).eapRestart = true as _;
         }
 
         me
@@ -93,22 +88,22 @@ impl EapServer {
                 (*self.interface).eapRespData
             );
             (*self.interface).eapRespData = wpabuf_alloc_copy(buffer.as_ptr() as *const c_void, buffer.len());
-            (*self.interface).eapResp = true;
+            (*self.interface).eapResp = true as _;
         }
     }
 
     pub fn step(&mut self) -> EapServerStepResult{
         let _state_changed = unsafe { eap_server_sm_step(self.state) } == 1;
 
-        let sent_message = unsafe { (*self.interface).eapReq };
-        let finished = unsafe { (*self.interface).eapSuccess };
-        let failed = unsafe { (*self.interface).eapFail };
+        let sent_message = unsafe { (*self.interface).eapReq } != 0;
+        let finished = unsafe { (*self.interface).eapSuccess } != 0 ;
+        let failed = unsafe { (*self.interface).eapFail } != 0;
 
         // clear flags
         unsafe {
-            (*self.interface).eapReq = false;
-            (*self.interface).eapSuccess = false;
-            (*self.interface).eapFail = false;
+            (*self.interface).eapReq = false as _;
+            (*self.interface).eapSuccess = false as _;
+            (*self.interface).eapFail = false as _;
         }
 
         let status = if failed {
@@ -151,7 +146,7 @@ impl EapServer {
             unsafe {
                 // Not sure what this does :/
                 (*user).methods[0].vendor = EAP_VENDOR_IETF as _;
-                (*user).methods[0].method = eap_type_EAP_TYPE_MD5;
+                (*user).methods[0].method = EapType_EAP_TYPE_MD5;
             }
             return 0;
         } 
@@ -168,7 +163,7 @@ impl EapServer {
         /* Only allow EAP-MD5 as the Phase 2 method */
         unsafe {
             (*user).methods[0].vendor = EAP_VENDOR_IETF as _;
-            (*user).methods[0].method = eap_type_EAP_TYPE_MD5;
+            (*user).methods[0].method = EapType_EAP_TYPE_MD5;
             
             let password = "password";
             ((*user).password, (*user).password_len) = util::malloc_str(password);

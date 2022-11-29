@@ -142,14 +142,14 @@ impl EapPeer {
         &mut *eap.peer_config
     }
 
-    unsafe extern "C" fn get_bool(ctx : *mut c_void, variable : eapol_bool_var) -> bool {
+    unsafe extern "C" fn get_bool(ctx : *mut c_void, variable : eapol_bool_var) -> u32 {
         let eap = &mut *(ctx as *mut Self);
-        eap.state_bool.get(&variable).copied().unwrap_or(false)
+        eap.state_bool.get(&variable).copied().unwrap_or(false).into()
     }
     
-    unsafe extern "C" fn set_bool(ctx : *mut c_void, variable : eapol_bool_var, value : bool) {
+    unsafe extern "C" fn set_bool(ctx : *mut c_void, variable : eapol_bool_var, value : u32) {
         let eap = &mut *(ctx as *mut Self);
-        eap.state_bool.insert(variable, value);
+        eap.state_bool.insert(variable, value != 0);
     }
 
     unsafe extern "C" fn get_int(ctx : *mut c_void, variable : eapol_int_var) -> u32 {

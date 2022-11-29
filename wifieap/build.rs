@@ -15,8 +15,6 @@ const SOURCE_LIBS : &[&str] = &[
     "eap_peer",
     "eap_server",
     "l2_packet",
-    "p2p",
-    "pasn",
     "radius",
     "rsn_supp",
     "tls",
@@ -24,6 +22,7 @@ const SOURCE_LIBS : &[&str] = &[
     "wps",
 ];
 
+// This needs (tag) hostap_2_9  (ca8c2bd28), later versions seem to fail.
 
 // Adapted from Makefile
 const BOTH_OBJECTS : &[&str] = &[ 
@@ -82,6 +81,7 @@ fn build_hostap() {
         .expect("Failed running make to build");
 
     for sublib in SOURCE_LIBS {
+        eprintln!("Adding lib:{}", sublib);
         let search =  std::fs::canonicalize(
             PathBuf::from(SOURCE_DIR)
                 .join(sublib)
