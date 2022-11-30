@@ -28,7 +28,8 @@ impl EapPeer {
         PEER_INIT.call_once(|| {
             unsafe {
                 //assert!(eap_peer_mschapv2_register() == 0);
-                assert!(eap_peer_md5_register() == 0);
+                //assert!(eap_peer_md5_register() == 0);
+                assert!(eap_peer_tls_register() == 0);
             }
         });
 
@@ -58,7 +59,11 @@ impl EapPeer {
         
         unsafe {
             ((*peer_config).identity, (*peer_config).identity_len) = util::malloc_str(username);
-            ((*peer_config).password, (*peer_config).password_len) = util::malloc_str(password);
+            //((*peer_config).password, (*peer_config).password_len) = util::malloc_str(password);
+
+            peer_config.ca_cert = util::malloc_str("blob://ca").0 as *mut i8;
+            peer_config.client_cert = util::malloc_str("blob://client").0 as *mut i8;
+            peer_config.private_key = util::malloc_str("blob://private").0 as *mut i8;
         }
 
         let wpabuf : *mut wpabuf = unsafe { wpabuf_alloc(0) };
@@ -172,6 +177,8 @@ impl EapPeer {
     }
 
     unsafe extern "C" fn get_config_blob(ctx : *mut c_void, name : *const i8) -> *const wpa_config_blob {
+        let str = CStr::from_ptr(name).to_str().unwrap();
+        println!("get_config_blob: {}", str);
         unimplemented!()
     }
 
