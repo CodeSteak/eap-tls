@@ -140,17 +140,6 @@ impl EapServer {
 
         unsafe {*user =  std::mem::zeroed();}
 
-        dbg!(phase2);
-
-        if phase2 == 0 {
-            unsafe {
-                // Not sure what this does :/
-                (*user).methods[0].vendor = EAP_VENDOR_IETF as _;
-                (*user).methods[0].method = EapType_EAP_TYPE_MD5;
-            }
-            return 0;
-        } 
-
         /*
         Optional check for username
         if (identity_len != 4 || identity == NULL ||
