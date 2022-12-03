@@ -1,5 +1,7 @@
 
 use std::{collections::HashMap, ffi::{c_int, CStr, c_void}, sync::Once};
+use lazy_static::__Deref;
+
 pub use crate::bindings_peer::*;
 use crate::util;
 
@@ -20,8 +22,10 @@ pub struct EapPeer {
     wpabuf : *mut wpabuf,
 
     state_bool : HashMap<eapol_bool_var, bool>,
-    state_int : HashMap<eapol_int_var, u32>
+    state_int : HashMap<eapol_int_var, u32>,
+    blobs : Vec<WpaBlobEntry>,
 }
+
 
 impl EapPeer {
     pub fn new() -> Box<Self> {
@@ -48,10 +52,11 @@ impl EapPeer {
             notify_cert: None,
             notify_status: None, 
             notify_eap_error: None, 
-            set_anon_id: None 
+            set_anon_id: None
         });
 
         let mut peer_config : Box<eap_peer_config> = Box::new(unsafe { std::mem::zeroed() });
+        peer_config.fragment_size =  1400;  // <- needs to be set, otherwise it get stuck sending 0 sized fragments.
         let config : Box<eap_config> = Box::new(unsafe { std::mem::zeroed() });
 
         let username = "user";
@@ -66,6 +71,12 @@ impl EapPeer {
             peer_config.private_key = util::malloc_str("blob://private").0 as *mut i8;
         }
 
+        let blobs = vec![
+            WpaBlobEntry::new("ca", include_bytes!("dummy/ca.pem")),
+            WpaBlobEntry::new("client", include_bytes!("dummy/client-cert.pem")),
+            WpaBlobEntry::new("private", include_bytes!("dummy/client-key.pem")),
+        ];
+
         let wpabuf : *mut wpabuf = unsafe { wpabuf_alloc(0) };
         assert!(!wpabuf.is_null());
 
@@ -76,7 +87,8 @@ impl EapPeer {
             state: std::ptr::null_mut(),
             wpabuf,
             state_bool: HashMap::new(),
-            state_int: HashMap::new()
+            state_int: HashMap::new(),
+            blobs
         });
     
 
@@ -177,9 +189,17 @@ impl EapPeer {
     }
 
     unsafe extern "C" fn get_config_blob(ctx : *mut c_void, name : *const i8) -> *const wpa_config_blob {
-        let str = CStr::from_ptr(name).to_str().unwrap();
-        println!("get_config_blob: {}", str);
-        unimplemented!()
+        let key = CStr::from_ptr(name).to_str().unwrap();
+        dbg!(&key);
+        let eap = &mut *(ctx as *mut Self);
+
+        for blob in &eap.blobs {
+            if blob.name == key {
+                return blob.blob.deref() as *const wpa_config_blob; 
+            }
+        }
+
+        std::ptr::null()
     }
 
     unsafe extern "C" fn notify_pending(ctx : *mut c_void) {
@@ -195,5 +215,30 @@ impl Drop for EapPeer {
             eap_peer_sm_deinit(self.state);
             wpabuf_free(self.wpabuf);
         };
+    }
+}
+
+struct WpaBlobEntry {
+    name : String,
+    _data : Box<[u8]>,
+    blob : Box<wpa_config_blob>,
+}
+
+impl WpaBlobEntry {
+    pub fn new(name : &str, data : &[u8]) -> Self {
+        let name = name.to_string();
+        let data = data.to_vec().into_boxed_slice();
+        let blob = Box::new(wpa_config_blob {
+            name: name.as_str().as_ptr() as *const i8 as *mut i8,
+            data: data.as_ptr() as *const u8 as *mut u8,
+            len: data.len(),
+            next: std::ptr::null_mut(),
+        });
+
+        Self {
+            name,
+            _data: data,
+            blob,
+        }
     }
 }

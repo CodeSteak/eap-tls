@@ -68,7 +68,7 @@ impl EapServer {
             tls_params.ca_cert_blob = ca_cert.as_ptr();
             tls_params.ca_cert_blob_len = ca_cert.len();
 
-            let client_cert = include_bytes!("dummy/server.pem");
+            let client_cert = include_bytes!("dummy/server-cert.pem");
             tls_params.client_cert_blob = client_cert.as_ptr();
             tls_params.client_cert_blob_len = client_cert.len();
 
@@ -76,7 +76,7 @@ impl EapServer {
             tls_params.private_key_blob = private_key.as_ptr();
             tls_params.private_key_blob_len = private_key.len();
 
-            let dh = include_bytes!("dummy/dh.conf");
+            let dh = include_bytes!("dummy/dh.pem");
             tls_params.dh_blob = dh.as_ptr();
             tls_params.dh_blob_len = dh.len();
 
@@ -219,3 +219,4 @@ impl Drop for EapServer {
         // TODO : More cleanup ???
     }
 }
+

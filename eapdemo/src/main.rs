@@ -1,4 +1,8 @@
-use wifieap::{peer::EapPeer, server::{EapServer, EapStatus}, server::EapServerStepResult};
+use wifieap::{
+    peer::EapPeer,
+    server::EapServerStepResult,
+    server::{EapServer, EapStatus},
+};
 
 fn main() {
     let mut peer = EapPeer::new();
@@ -25,7 +29,7 @@ fn main() {
     }
 }
 
-fn hex_dump(label : &str, data : &[u8]) {
+fn hex_dump(label: &str, data: &[u8]) {
     println!("{:10}", label);
 
     for (i, byte) in data.iter().enumerate() {
