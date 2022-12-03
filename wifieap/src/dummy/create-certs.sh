@@ -1,6 +1,8 @@
 set -ev
 # https://legacy.thomas-leister.de/eine-eigene-openssl-ca-erstellen-und-zertifikate-ausstellen/
 
+# Note: CA password is "123456"
+
 # create dh param
 test -f dh.pem || openssl dhparam -out dh.pem 2048
 
