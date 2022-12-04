@@ -1,11 +1,11 @@
-use std::{process::Command, path::{PathBuf}};
+use std::{path::PathBuf, process::Command};
 
-extern crate cc;
 extern crate bindgen;
+extern crate cc;
 
-const SOURCE_DIR : &str = "./hostap/src/";
+const SOURCE_DIR: &str = "./hostap/src/";
 
-const SOURCE_LIBS : &[&str] = &[
+const SOURCE_LIBS: &[&str] = &[
     "ap",
     "common",
     "crypto",
@@ -25,7 +25,7 @@ const SOURCE_LIBS : &[&str] = &[
 // This needs (tag) hostap_2_9  (ca8c2bd28), later versions seem to fail.
 
 // Adapted from Makefile
-const BOTH_OBJECTS : &[&str] = &[ 
+const BOTH_OBJECTS: &[&str] = &[
     "eap_common/eap_peap_common.c",
     "eap_common/eap_psk_common.c",
     "eap_common/eap_pax_common.c",
@@ -34,7 +34,7 @@ const BOTH_OBJECTS : &[&str] = &[
     "eap_common/chap.c",
 ];
 
-const PEER_OBJECTS : &[&str] = &[
+const PEER_OBJECTS: &[&str] = &[
     "eap_peer/eap_tls.c",
     "eap_peer/eap_peap.c",
     "eap_peer/eap_ttls.c",
@@ -52,7 +52,7 @@ const PEER_OBJECTS : &[&str] = &[
     "eap_peer/eap_tls_common.c",
 ];
 
-const SERVER_OBJECTS : &[&str] = &[
+const SERVER_OBJECTS: &[&str] = &[
     "eap_server/eap_server_tls.c",
     "eap_server/eap_server_peap.c",
     "eap_server/eap_server_ttls.c",
@@ -74,7 +74,7 @@ fn main() {
     bindgen_hostap();
 }
 
-fn build_hostap() {    
+fn build_hostap() {
     Command::new("make")
         .current_dir(SOURCE_DIR)
         .status()
@@ -82,10 +82,7 @@ fn build_hostap() {
 
     for sublib in SOURCE_LIBS {
         eprintln!("Adding lib:{}", sublib);
-        let search =  std::fs::canonicalize(
-            PathBuf::from(SOURCE_DIR)
-                .join(sublib)
-        ).unwrap();
+        let search = std::fs::canonicalize(PathBuf::from(SOURCE_DIR).join(sublib)).unwrap();
 
         println!("cargo:rustc-link-search={}", search.display());
         println!("cargo:rustc-link-lib=static={sublib}")
@@ -96,7 +93,7 @@ fn build_hostap() {
     lib_from_objects("methods_server", SERVER_OBJECTS);
 }
 
-fn lib_from_objects(label : &str, files : &[&str]) {
+fn lib_from_objects(label: &str, files: &[&str]) {
     let mut build = cc::Build::new();
 
     for f in files {
@@ -112,8 +109,14 @@ fn lib_from_objects(label : &str, files : &[&str]) {
 fn includes() -> Vec<PathBuf> {
     vec![
         PathBuf::from(SOURCE_DIR).canonicalize().unwrap(),
-        PathBuf::from(SOURCE_DIR).join("utils").canonicalize().unwrap(),
-        PathBuf::from(SOURCE_DIR).join("../").canonicalize().unwrap(),
+        PathBuf::from(SOURCE_DIR)
+            .join("utils")
+            .canonicalize()
+            .unwrap(),
+        PathBuf::from(SOURCE_DIR)
+            .join("../")
+            .canonicalize()
+            .unwrap(),
     ]
 }
 
@@ -125,7 +128,8 @@ fn bindgen_hostap() {
         .clang_arg("-DIEEE8021X_EAPOL");
 
     println!("cargo:rerun-if-changed=header_peer.h");
-    builder.clone()
+    builder
+        .clone()
         .header("header_peer.h")
         .generate()
         .expect("Unable to generate bindings")

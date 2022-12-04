@@ -1,23 +1,26 @@
-use std::{collections::HashMap, ffi::{c_int, CStr, c_void}, sync::Once};
 pub use crate::bindings_server::*;
 use crate::util::{self, EapStatus};
-
+use std::{
+    collections::HashMap,
+    ffi::{c_int, c_void, CStr},
+    sync::Once,
+};
 
 static SERVER_INIT: Once = Once::new();
 
 pub struct EapServerStepResult {
-    pub response : Option<Vec<u8>>,
-    pub key_material : Option<Vec<u8>>,
-    pub status : EapStatus,
+    pub response: Option<Vec<u8>>,
+    pub key_material: Option<Vec<u8>>,
+    pub status: EapStatus,
 }
 
 pub struct EapServer {
-    interface : *mut eap_eapol_interface,
-    callbacks : eapol_callbacks,
-    eap_config : eap_config,
-    state : *mut eap_sm,
+    interface: *mut eap_eapol_interface,
+    callbacks: eapol_callbacks,
+    eap_config: eap_config,
+    state: *mut eap_sm,
 
-    tls_ctx : *mut c_void,
+    tls_ctx: *mut c_void,
 
     tls_params: Box<tls_connection_params>,
     tls_config: Box<tls_config>,
@@ -34,7 +37,7 @@ impl EapServer {
             }
         });
 
-        let callbacks : eapol_callbacks = eapol_callbacks {
+        let callbacks: eapol_callbacks = eapol_callbacks {
             get_eap_user: Some(Self::server_get_eap_user),
             get_eap_req_id_text: Some(Self::get_eap_req_id_text),
             log_msg: None,
@@ -44,18 +47,17 @@ impl EapServer {
             erp_add_key: None,
         };
 
-        let mut eap_config : eap_config = unsafe { std::mem::zeroed() };
+        let mut eap_config: eap_config = unsafe { std::mem::zeroed() };
         eap_config.eap_server = 1;
-
 
         // Init Tls
 
-        let mut tls_config : Box<tls_config> = Box::new(unsafe { std::mem::zeroed() });
-        let mut tls_params : Box<tls_connection_params> = Box::new(unsafe { std::mem::zeroed() });
+        let mut tls_config: Box<tls_config> = Box::new(unsafe { std::mem::zeroed() });
+        let mut tls_params: Box<tls_connection_params> = Box::new(unsafe { std::mem::zeroed() });
 
         let tls_ctx;
         unsafe {
-            tls_ctx = tls_init(&* tls_config);
+            tls_ctx = tls_init(&*tls_config);
             assert!(!tls_ctx.is_null());
 
             let ca_cert = include_bytes!("dummy/ca.pem");
@@ -74,12 +76,12 @@ impl EapServer {
             tls_params.dh_blob = dh.as_ptr();
             tls_params.dh_blob_len = dh.len();
 
-            assert_eq!(tls_global_set_params(tls_ctx, &* tls_params), 0);
+            assert_eq!(tls_global_set_params(tls_ctx, &*tls_params), 0);
             assert_eq!(tls_global_set_verify(tls_ctx, 0, 1), 0);
         }
 
         eap_config.ssl_ctx = tls_ctx as *mut c_void;
-        
+
         let mut me = Box::new(Self {
             interface: std::ptr::null_mut(),
             callbacks,
@@ -90,16 +92,11 @@ impl EapServer {
             tls_config,
         });
 
-        
-        me.state = unsafe { 
+        me.state = unsafe {
             let me_ptr = me.as_mut() as *mut Self as *mut c_void;
             let callback_ptr = (&me.callbacks) as *const eapol_callbacks;
 
-            eap_server_sm_init(
-                me_ptr, 
-                callback_ptr, 
-                &mut me.eap_config, 
-            )
+            eap_server_sm_init(me_ptr, callback_ptr, &mut me.eap_config)
         };
         assert!(!me.state.is_null());
 
@@ -110,24 +107,22 @@ impl EapServer {
         }
 
         me
-
     }
 
-    pub fn receive(&mut self, buffer : &[u8]) {
+    pub fn receive(&mut self, buffer: &[u8]) {
         unsafe {
-            wpabuf_free(
-                (*self.interface).eapRespData
-            );
-            (*self.interface).eapRespData = wpabuf_alloc_copy(buffer.as_ptr() as *const c_void, buffer.len());
+            wpabuf_free((*self.interface).eapRespData);
+            (*self.interface).eapRespData =
+                wpabuf_alloc_copy(buffer.as_ptr() as *const c_void, buffer.len());
             (*self.interface).eapResp = true as _;
         }
     }
 
-    pub fn step(&mut self) -> EapServerStepResult{
+    pub fn step(&mut self) -> EapServerStepResult {
         let _state_changed = unsafe { eap_server_sm_step(self.state) } == 1;
 
         let sent_message = unsafe { (*self.interface).eapReq } != 0;
-        let finished = unsafe { (*self.interface).eapSuccess } != 0 ;
+        let finished = unsafe { (*self.interface).eapSuccess } != 0;
         let failed = unsafe { (*self.interface).eapFail } != 0;
         let has_key_material = unsafe { (*self.interface).eapKeyAvailable } != 0;
 
@@ -147,13 +142,13 @@ impl EapServer {
         };
 
         let buffer_filled = unsafe { !(*self.interface).eapReqData.is_null() };
-        let response = if (sent_message || finished || failed) && buffer_filled  {
+        let response = if (sent_message || finished || failed) && buffer_filled {
             let data = unsafe { (*self.interface).eapReqData };
             let data = unsafe { std::slice::from_raw_parts((*data).buf, (*data).used) }.to_vec();
-            
+
             Some(data)
         } else {
-           None
+            None
         };
 
         let key_material = if has_key_material {
@@ -174,13 +169,21 @@ impl EapServer {
         }
     }
 
-    unsafe extern "C"  fn server_get_eap_user(ctx : *mut c_void, identity : *const u8, identity_len : usize,  phase2 : c_int, user : *mut eap_user) -> i32 {
-        // NOTE: 
+    unsafe extern "C" fn server_get_eap_user(
+        ctx: *mut c_void,
+        identity: *const u8,
+        identity_len: usize,
+        phase2: c_int,
+        user: *mut eap_user,
+    ) -> i32 {
+        // NOTE:
         // user seems to get freed automaticly via `eap_user_free`.
 
         dbg!();
 
-        unsafe {*user =  std::mem::zeroed();}
+        unsafe {
+            *user = std::mem::zeroed();
+        }
 
         /*
         Optional check for username
@@ -188,22 +191,22 @@ impl EapServer {
             os_memcmp(identity, "user", 4) != 0) {
             printf("Unknown user\n");
             return -1;
-	    }
+        }
         */
 
         /* Only allow EAP-MD5 as the Phase 2 method */
         unsafe {
             (*user).methods[0].vendor = EAP_VENDOR_IETF as _;
             (*user).methods[0].method = EapType_EAP_TYPE_TLS;
-            
+
             //let password = "password";
             //((*user).password, (*user).password_len) = util::malloc_str(password);
         }
-        
+
         0
     }
 
-    unsafe extern "C" fn get_eap_req_id_text(ctx : *mut c_void, len : *mut usize) -> *const i8 {
+    unsafe extern "C" fn get_eap_req_id_text(ctx: *mut c_void, len: *mut usize) -> *const i8 {
         *len = 0;
         std::ptr::null()
     }
@@ -218,4 +221,3 @@ impl Drop for EapServer {
         // TODO : More cleanup ???
     }
 }
-
