@@ -9,3 +9,10 @@ pub unsafe fn malloc_str(s : &str) -> (*mut u8, usize) {
 
     (ptr as *mut u8, s.len())
 } 
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum EapStatus {
+    Ok,
+    Finished,
+    Failed,
+}

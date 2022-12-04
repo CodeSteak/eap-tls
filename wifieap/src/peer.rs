@@ -3,15 +3,17 @@ use std::{collections::HashMap, ffi::{c_int, CStr, c_void}, sync::Once};
 use lazy_static::__Deref;
 
 pub use crate::bindings_peer::*;
-use crate::util;
+use crate::util::{self, EapStatus};
 
 static PEER_INIT: Once = Once::new();
 
-enum EapPeerResult {
-    Respond(Vec<u8>),
-    Ok,
-    Finished,
+pub struct EapPeerResult {
+    pub status : EapStatus,
+    pub response : Option<Vec<u8>>,
+    pub key_material : Option<Vec<u8>>,
 }
+
+
 
 pub struct EapPeer {
     callbacks : Box<eapol_callbacks>,
@@ -110,36 +112,50 @@ impl EapPeer {
         me
     }
 
-    pub fn step(&mut self) -> Option<Vec<u8>> {
-        let mut ret = None;
+    pub fn step(&mut self) -> EapPeerResult {
         let _state_changed = unsafe { eap_peer_sm_step(self.state) } == 1;
 
         let should_sent_response = *self.state_bool.get(&eapol_bool_var_EAPOL_eapResp).unwrap_or(&false);
-        
-        if should_sent_response {
+        let success = *self.state_bool.get(&eapol_bool_var_EAPOL_eapSuccess).unwrap_or(&false);
+        let failure = *self.state_bool.get(&eapol_bool_var_EAPOL_eapFail).unwrap_or(&false);
+
+        let response = if should_sent_response {
             let data = unsafe { eap_get_eapRespData(self.state) };
             if data.is_null() {
-                return None;
+                None
+            } else {
+                let ret = Some(unsafe { std::slice::from_raw_parts((*data).buf, (*data).used) }.to_vec());
+                unsafe {wpabuf_free(data) };
+                ret
             }
+        } else {
+            None
+        };
 
-            ret = Some(unsafe { std::slice::from_raw_parts((*data).buf, (*data).used) }.to_vec());
-            unsafe {wpabuf_free(data) };
+        let key_material = if success && unsafe {eap_key_available(self.state)} != 0 {
+            unsafe {
+                let mut length : usize = 0;
+                let key_data = eap_get_eapKeyData(self.state, (&mut length) as *mut usize);
+
+                Some(std::slice::from_raw_parts(key_data, length).to_vec())
+            }
+        } else {None};
+
+        assert!(!(failure && success));
+
+        let status = if success {
+            EapStatus::Finished
+        } else if failure {
+            EapStatus::Failed
+        } else {
+            EapStatus::Ok
+        };
+
+        EapPeerResult {
+            status,
+            response,
+            key_material
         }
-
-        /* 
-            // Key Material
-            if (eap_ctx.eapSuccess) {
-                res = 0;
-                if (eap_key_available(eap_ctx.eap)) {
-                    const u8 *key;
-                    size_t key_len;
-                    key = eap_get_eapKeyData(eap_ctx.eap, &key_len);
-                    wpa_hexdump(MSG_DEBUG, "EAP keying material",
-                            key, key_len);
-                }
-            }
-        */
-        ret
     }
 
     pub fn receive(&mut self, input : &[u8]) {

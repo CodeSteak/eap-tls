@@ -1,20 +1,14 @@
 use std::{collections::HashMap, ffi::{c_int, CStr, c_void}, sync::Once};
 pub use crate::bindings_server::*;
-use crate::util;
+use crate::util::{self, EapStatus};
 
 
 static SERVER_INIT: Once = Once::new();
 
 pub struct EapServerStepResult {
     pub response : Option<Vec<u8>>,
+    pub key_material : Option<Vec<u8>>,
     pub status : EapStatus,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum EapStatus {
-    Ok,
-    Finished,
-    Failed,
 }
 
 pub struct EapServer {
@@ -120,12 +114,6 @@ impl EapServer {
     }
 
     pub fn receive(&mut self, buffer : &[u8]) {
-        /*
-        wpabuf_free(eap_ctx.eap_if->eapRespData);
-	eap_ctx.eap_if->eapRespData = wpabuf_alloc_copy(data, data_len);
-	if (eap_ctx.eap_if->eapRespData)
-		eap_ctx.eap_if->eapResp = true;
-        */
         unsafe {
             wpabuf_free(
                 (*self.interface).eapRespData
@@ -141,6 +129,7 @@ impl EapServer {
         let sent_message = unsafe { (*self.interface).eapReq } != 0;
         let finished = unsafe { (*self.interface).eapSuccess } != 0 ;
         let failed = unsafe { (*self.interface).eapFail } != 0;
+        let has_key_material = unsafe { (*self.interface).eapKeyAvailable } != 0;
 
         // clear flags
         unsafe {
@@ -158,21 +147,31 @@ impl EapServer {
         };
 
         let buffer_filled = unsafe { !(*self.interface).eapReqData.is_null() };
-        if (sent_message || finished || failed) && buffer_filled  {
+        let response = if (sent_message || finished || failed) && buffer_filled  {
             let data = unsafe { (*self.interface).eapReqData };
             let data = unsafe { std::slice::from_raw_parts((*data).buf, (*data).used) }.to_vec();
             
-            EapServerStepResult {
-                response: Some(data),
-                status
+            Some(data)
+        } else {
+           None
+        };
+
+        let key_material = if has_key_material {
+            unsafe {
+                let key = (*self.interface).eapKeyData;
+                let length = (*self.interface).eapKeyDataLen;
+                let key = std::slice::from_raw_parts(key, length).to_vec();
+                Some(key)
             }
         } else {
-            EapServerStepResult {
-                response: None,
-                status
-            }
-        }
+            None
+        };
 
+        EapServerStepResult {
+            status,
+            response,
+            key_material,
+        }
     }
 
     unsafe extern "C"  fn server_get_eap_user(ctx : *mut c_void, identity : *const u8, identity_len : usize,  phase2 : c_int, user : *mut eap_user) -> i32 {
