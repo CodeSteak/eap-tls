@@ -3,13 +3,13 @@ use wifieap::{peer::EapPeer, server::EapServer, EapStatus, TlsConfig};
 fn main() {
     let mut peer = EapPeer::new();
 
-    let mut server = EapServer::new()
+    let mut server = EapServer::buider()
         .set_tls_config(TlsConfig::dummy_server())
         .allow_tls()
         .build();
 
     for i in 0..100 {
-        println!("=== {}", i);
+        println!("=== {i}");
 
         let res_server = server.step();
         if let Some(buffer) = &res_server.response {
@@ -23,8 +23,8 @@ fn main() {
 
         let res_peer = peer.step();
         if let Some(buffer) = &res_peer.response {
-            hex_dump("P->S", &buffer);
-            server.receive(&buffer);
+            hex_dump("P->S", buffer);
+            server.receive(buffer);
         }
 
         if let Some(mat) = &res_peer.key_material {
@@ -42,11 +42,11 @@ fn main() {
 }
 
 fn hex_dump(label: &str, data: &[u8]) {
-    println!("{:10}", label);
+    println!("{label:10}");
 
     for line in data.chunks(16) {
         for byte in line {
-            print!("{:02x} ", byte);
+            print!("{byte:02x} ",);
         }
         print!(" | ");
 

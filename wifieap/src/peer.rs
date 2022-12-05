@@ -1,7 +1,7 @@
 use lazy_static::__Deref;
 use std::{
     collections::HashMap,
-    ffi::{c_int, c_void, CStr},
+    ffi::{c_void, CStr},
     sync::Once,
 };
 
@@ -46,7 +46,7 @@ impl EapPeer {
             set_bool: Some(Self::set_bool),
             get_int: Some(Self::get_int),
             set_int: Some(Self::set_int),
-            get_eapReqData: Some(Self::get_eapReqData),
+            get_eapReqData: Some(Self::get_eap_req_data),
             set_config_blob: Some(Self::set_config_blob),
             get_config_blob: Some(Self::get_config_blob),
             notify_pending: Some(Self::notify_pending),
@@ -65,10 +65,8 @@ impl EapPeer {
         let password = "password";
 
         unsafe {
-            ((*peer_config).identity, (*peer_config).identity_len) =
-                crate::util::malloc_str(username);
-            ((*peer_config).password, (*peer_config).password_len) =
-                crate::util::malloc_str(password);
+            (peer_config.identity, peer_config.identity_len) = crate::util::malloc_str(username);
+            (peer_config.password, peer_config.password_len) = crate::util::malloc_str(password);
 
             peer_config.ca_cert = crate::util::malloc_str("blob://ca").0 as *mut i8;
             peer_config.client_cert = crate::util::malloc_str("blob://client").0 as *mut i8;
@@ -204,12 +202,12 @@ impl EapPeer {
         eap.state_int.insert(variable, value);
     }
 
-    unsafe extern "C" fn get_eapReqData(ctx: *mut c_void) -> *mut wpabuf {
+    unsafe extern "C" fn get_eap_req_data(ctx: *mut c_void) -> *mut wpabuf {
         let eap = &mut *(ctx as *mut Self);
         eap.wpabuf
     }
 
-    unsafe extern "C" fn set_config_blob(ctx: *mut c_void, blob: *mut wpa_config_blob) {
+    unsafe extern "C" fn set_config_blob(_ctx: *mut c_void, _blob: *mut wpa_config_blob) {
         unimplemented!()
     }
 
@@ -230,7 +228,7 @@ impl EapPeer {
         std::ptr::null()
     }
 
-    unsafe extern "C" fn notify_pending(ctx: *mut c_void) {
+    unsafe extern "C" fn notify_pending(_ctx: *mut c_void) {
         // NOP
     }
 }

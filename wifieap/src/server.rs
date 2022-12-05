@@ -4,7 +4,7 @@ use crate::{EapMethod, EapStatus, TlsConfig};
 
 use std::{
     collections::HashMap,
-    ffi::{c_int, c_void, CStr},
+    ffi::{c_int, c_void},
     sync::Once,
 };
 
@@ -64,7 +64,7 @@ pub struct EapServer {
     callbacks: eapol_callbacks,
     eap_config: eap_config,
     state: *mut eap_sm,
-    tls_state: Option<EapServerTlsState>,
+    _tls_state: Option<EapServerTlsState>,
     users: HashMap<String, String>,
     method_priorities: Vec<EapMethod>,
 }
@@ -72,9 +72,9 @@ pub struct EapServer {
 // This is keep around to prevent the memory from being freed
 struct EapServerTlsState {
     tls_ctx: *mut c_void,
-    tls_params: Box<tls_connection_params>,
-    tls_config: Box<tls_config>,
-    TlsConfig: TlsConfig,
+    _tls_params: Box<tls_connection_params>,
+    _tls_config: Box<tls_config>,
+    _cfg: TlsConfig,
 }
 
 impl Drop for EapServerTlsState {
@@ -86,7 +86,7 @@ impl Drop for EapServerTlsState {
 }
 
 impl EapServer {
-    pub fn new() -> EapServerBuilder {
+    pub fn buider() -> EapServerBuilder {
         EapServerBuilder::new()
     }
 
@@ -113,7 +113,7 @@ impl EapServer {
         // Init Tls
         // Note: Cannot free builder.tls_config as it used by tls config.
         let tls_state = if let Some(tls) = builder.tls_config {
-            let mut tls_config: Box<tls_config> = Box::new(unsafe { std::mem::zeroed() });
+            let tls_config: Box<tls_config> = Box::new(unsafe { std::mem::zeroed() });
             let mut tls_params: Box<tls_connection_params> =
                 Box::new(unsafe { std::mem::zeroed() });
 
@@ -146,9 +146,9 @@ impl EapServer {
 
             Some(EapServerTlsState {
                 tls_ctx,
-                tls_params,
-                tls_config,
-                TlsConfig: tls,
+                _tls_params: tls_params,
+                _tls_config: tls_config,
+                _cfg: tls,
             })
         } else {
             None
@@ -159,7 +159,7 @@ impl EapServer {
             callbacks,
             eap_config,
             state: std::ptr::null_mut(),
-            tls_state,
+            _tls_state: tls_state,
             users: builder.passwords,
             method_priorities: builder.method_priorities,
         });
@@ -245,7 +245,7 @@ impl EapServer {
         ctx: *mut c_void,
         identity: *const u8,
         identity_len: usize,
-        phase2: c_int,
+        _phase2: c_int,
         user: *mut eap_user,
     ) -> i32 {
         let me = &mut *(ctx as *mut Self);
@@ -282,7 +282,7 @@ impl EapServer {
         0
     }
 
-    unsafe extern "C" fn get_eap_req_id_text(ctx: *mut c_void, len: *mut usize) -> *const i8 {
+    unsafe extern "C" fn get_eap_req_id_text(_ctx: *mut c_void, len: *mut usize) -> *const i8 {
         *len = 0;
         std::ptr::null()
     }
