@@ -1,12 +1,12 @@
-use wifieap::{
-    peer::EapPeer,
-    server::EapServer,
-    util::EapStatus,
-};
+use wifieap::{peer::EapPeer, server::EapServer, EapStatus, TlsConfig};
 
 fn main() {
     let mut peer = EapPeer::new();
-    let mut server = EapServer::new();
+
+    let mut server = EapServer::new()
+        .set_tls_config(TlsConfig::dummy_server())
+        .allow_tls()
+        .build();
 
     for i in 0..100 {
         println!("=== {}", i);
@@ -32,7 +32,10 @@ fn main() {
         }
 
         if res_server.status != EapStatus::Ok || res_peer.status != EapStatus::Ok {
-            eprintln!("peer {:?} server {:?}", &res_peer.status, &res_server.status);
+            eprintln!(
+                "peer {:?} server {:?}",
+                &res_peer.status, &res_server.status
+            );
             break;
         }
     }
