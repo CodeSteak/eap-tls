@@ -81,7 +81,8 @@ fn build_hostap() {
         .expect("Failed running make to build");
 
     for sublib in SOURCE_LIBS {
-        eprintln!("Adding lib:{}", sublib);
+        patch_makefile(sublib);
+        eprintln!("Adding lib:{sublib}");
         let search = std::fs::canonicalize(PathBuf::from(SOURCE_DIR).join(sublib)).unwrap();
 
         println!("cargo:rustc-link-search={}", search.display());
@@ -93,15 +94,46 @@ fn build_hostap() {
     lib_from_objects("methods_server", SERVER_OBJECTS);
 }
 
+fn patch_makefile(sublib: &str) {
+    // Newer lld(?) version seem to fail with thin archives
+    eprintln!("Incase of error, try to use ld.gold");
+
+    let from = "$(AR) crT $@ $?";
+    let to = "$(AR) cr $@ $?";
+    // So we patch the Makefile to use the old style. This is a bit of a hack, but it works.
+    // Alternative would be build custom makefile, but that would be more work.
+    let lib_path = PathBuf::from(SOURCE_DIR).join(sublib);
+    let makefile = lib_path.join("Makefile");
+    let mut contents = std::fs::read_to_string(&makefile).unwrap();
+    if !contents.contains(from) {
+        return; // everything is fine
+    }
+    contents = contents.replace(from, to);
+    std::fs::write(&makefile, contents).unwrap();
+
+    // rebuild
+    Command::new("make")
+        .arg("clean")
+        .current_dir(&lib_path)
+        .status()
+        .expect("Failed running make to clean");
+
+    Command::new("make")
+        .current_dir(&lib_path)
+        .status()
+        .expect("Failed running make");
+}
+
 fn lib_from_objects(label: &str, files: &[&str]) {
     let mut build = cc::Build::new();
+    build.warnings(false);
+    build.flag("-w");
 
     for f in files {
         build.file(PathBuf::from(SOURCE_DIR).join(f).canonicalize().unwrap());
     }
 
     build.includes(includes());
-
     build.compile(label);
     println!("cargo:rustc-link-lib=static={label}");
 }
