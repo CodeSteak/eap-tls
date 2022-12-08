@@ -1,7 +1,9 @@
 use wifieap::{peer::EapPeer, server::EapServer, EapStatus, TlsConfig};
 
 fn main() {
-    let mut peer = EapPeer::new();
+    let mut peer = EapPeer::builder("user")
+        .set_tls_config(TlsConfig::dummy_client())
+        .build();
 
     let mut server = EapServer::buider()
         .set_tls_config(TlsConfig::dummy_server())

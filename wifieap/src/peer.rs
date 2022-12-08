@@ -6,7 +6,7 @@ use std::{
 };
 
 pub use crate::bindings_peer::*;
-use crate::EapStatus;
+use crate::{EapStatus, TlsConfig};
 
 static PEER_INIT: Once = Once::new();
 
@@ -29,8 +29,42 @@ pub struct EapPeer {
     blobs: Vec<WpaBlobEntry>,
 }
 
+pub struct EapPeerBuilder {
+    identity: String,
+    password: Option<String>,
+    tls_config: Option<TlsConfig>,
+}
+
+impl EapPeerBuilder {
+    pub fn new(identity: &str) -> Self {
+        Self {
+            identity: identity.to_string(),
+            password: None,
+            tls_config: None,
+        }
+    }
+
+    pub fn set_password(&mut self, password: &str) -> &mut Self {
+        self.password = Some(password.to_string());
+        self
+    }
+
+    pub fn set_tls_config(&mut self, tls_config: TlsConfig) -> &mut Self {
+        self.tls_config = Some(tls_config);
+        self
+    }
+
+    pub fn build(&mut self) -> Box<EapPeer> {
+        EapPeer::new(self)
+    }
+}
+
 impl EapPeer {
-    pub fn new() -> Box<Self> {
+    pub fn builder(identity: &str) -> EapPeerBuilder {
+        EapPeerBuilder::new(identity)
+    }
+
+    fn new(builder: &EapPeerBuilder) -> Box<Self> {
         PEER_INIT.call_once(|| {
             unsafe {
                 //assert!(eap_peer_mschapv2_register() == 0);
@@ -61,23 +95,36 @@ impl EapPeer {
         peer_config.fragment_size = 1400; // <- needs to be set, otherwise it get stuck sending 0 sized fragments.
         let config: Box<eap_config> = Box::new(unsafe { std::mem::zeroed() });
 
-        let username = "user";
-        let password = "password";
-
+        // Identity
         unsafe {
-            (peer_config.identity, peer_config.identity_len) = crate::util::malloc_str(username);
-            (peer_config.password, peer_config.password_len) = crate::util::malloc_str(password);
-
-            peer_config.ca_cert = crate::util::malloc_str("blob://ca").0 as *mut i8;
-            peer_config.client_cert = crate::util::malloc_str("blob://client").0 as *mut i8;
-            peer_config.private_key = crate::util::malloc_str("blob://private").0 as *mut i8;
+            (peer_config.identity, peer_config.identity_len) =
+                crate::util::malloc_str(&builder.identity);
         }
 
-        let blobs = vec![
-            WpaBlobEntry::new("ca", include_bytes!("dummy/ca.pem")),
-            WpaBlobEntry::new("client", include_bytes!("dummy/client-cert.pem")),
-            WpaBlobEntry::new("private", include_bytes!("dummy/client-key.pem")),
-        ];
+        // Password
+        if let Some(password) = &builder.password {
+            unsafe {
+                (peer_config.password, peer_config.password_len) =
+                    crate::util::malloc_str(password);
+            }
+        }
+
+        // TLS / Ca
+        let blobs = if let Some(tls) = &builder.tls_config {
+            unsafe {
+                peer_config.ca_cert = crate::util::malloc_str("blob://ca").0 as *mut i8;
+                peer_config.client_cert = crate::util::malloc_str("blob://client").0 as *mut i8;
+                peer_config.private_key = crate::util::malloc_str("blob://private").0 as *mut i8;
+            }
+
+            vec![
+                WpaBlobEntry::new("ca", &tls.ca_cert),
+                WpaBlobEntry::new("client", &tls.server_cert),
+                WpaBlobEntry::new("private", &tls.server_key),
+            ]
+        } else {
+            vec![]
+        };
 
         let wpabuf: *mut wpabuf = unsafe { wpabuf_alloc(0) };
         assert!(!wpabuf.is_null());
