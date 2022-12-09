@@ -44,11 +44,28 @@ fn tls_handshake() {
 
     assert_eq!(res_peer.status, EapStatus::Finished);
     assert_eq!(res_server.status, EapStatus::Finished);
+    assert!(res_peer.key_material.is_some());
+    assert!(res_server.key_material.is_some());
     assert_eq!(res_peer.key_material, res_server.key_material);
 }
 
 #[test]
-fn tls_handshake_with_psk() {
+fn tls_handshake_failing() {
+    let mut peer = EapPeer::builder("user").set_password("Hello World").build();
+
+    let mut server = EapServer::buider()
+        .set_tls_config(TlsConfig::dummy_server())
+        .allow_tls()
+        .build();
+
+    let (res_peer, res_server) = run_handshake(&mut peer, &mut server);
+
+    assert_eq!(res_peer.status, EapStatus::Failed);
+    assert_eq!(res_server.status, EapStatus::Failed);
+}
+
+#[test]
+fn handshake_with_psk() {
     let mut peer = EapPeer::builder("pskuser").set_password("psk").build();
 
     let mut server = EapServer::buider()
@@ -60,4 +77,19 @@ fn tls_handshake_with_psk() {
 
     assert_eq!(res_peer.status, EapStatus::Finished);
     assert_eq!(res_server.status, EapStatus::Finished);
+}
+
+#[test]
+fn handshake_with_psk_failing() {
+    let mut peer = EapPeer::builder("user").set_password("password").build();
+
+    let mut server = EapServer::buider()
+        .set_password("not this one", "123456")
+        .allow_md5()
+        .build();
+
+    let (res_peer, res_server) = run_handshake(&mut peer, &mut server);
+
+    assert_eq!(res_peer.status, EapStatus::Failed);
+    assert_eq!(res_server.status, EapStatus::Failed);
 }

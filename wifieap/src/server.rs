@@ -268,7 +268,7 @@ impl EapServer {
                     if let Some(password) = password {
                         unsafe {
                             (*user).methods[i].vendor = EAP_VENDOR_IETF as _;
-                            (*user).methods[i].method = EapType_EAP_TYPE_TLS as _;
+                            (*user).methods[i].method = EapType_EAP_TYPE_MD5 as _;
                             ((*user).password, (*user).password_len) = util::malloc_str(password);
                         }
                     }
