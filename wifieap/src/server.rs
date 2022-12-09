@@ -10,7 +10,8 @@ use std::{
 
 static SERVER_INIT: Once = Once::new();
 
-pub struct EapServerStepResult {
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct EapServerResult {
     pub response: Option<Vec<u8>>,
     pub key_material: Option<Vec<u8>>,
     pub status: EapStatus,
@@ -190,7 +191,7 @@ impl EapServer {
         }
     }
 
-    pub fn step(&mut self) -> EapServerStepResult {
+    pub fn step(&mut self) -> EapServerResult {
         let _state_changed = unsafe { eap_server_sm_step(self.state) } == 1;
 
         let sent_message = unsafe { (*self.interface).eapReq } != 0;
@@ -234,7 +235,7 @@ impl EapServer {
             None
         };
 
-        EapServerStepResult {
+        EapServerResult {
             status,
             response,
             key_material,

@@ -19,6 +19,9 @@ pub(crate) mod bindings_server;
 pub mod peer;
 pub mod server;
 pub mod util;
+//
+#[cfg(test)]
+mod test;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum EapStatus {

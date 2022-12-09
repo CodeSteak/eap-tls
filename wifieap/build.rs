@@ -25,47 +25,15 @@ const SOURCE_LIBS: &[&str] = &[
 // This needs (tag) hostap_2_9  (ca8c2bd28), later versions seem to fail.
 
 // Adapted from Makefile
-const BOTH_OBJECTS: &[&str] = &[
-    "eap_common/eap_peap_common.c",
-    "eap_common/eap_psk_common.c",
-    "eap_common/eap_pax_common.c",
-    "eap_common/eap_sake_common.c",
-    "eap_common/eap_gpsk_common.c",
-    "eap_common/chap.c",
-];
-
 const PEER_OBJECTS: &[&str] = &[
     "eap_peer/eap_tls.c",
-    "eap_peer/eap_peap.c",
-    "eap_peer/eap_ttls.c",
     "eap_peer/eap_md5.c",
-    "eap_peer/eap_mschapv2.c",
-    "eap_peer/mschapv2.c",
-    "eap_peer/eap_otp.c",
-    "eap_peer/eap_gtc.c",
-    "eap_peer/eap_leap.c",
-    "eap_peer/eap_psk.c",
-    "eap_peer/eap_pax.c",
-    "eap_peer/eap_sake.c",
-    "eap_peer/eap_gpsk.c",
-    "eap_common/eap_common.c",
     "eap_peer/eap_tls_common.c",
 ];
 
 const SERVER_OBJECTS: &[&str] = &[
     "eap_server/eap_server_tls.c",
-    "eap_server/eap_server_peap.c",
-    "eap_server/eap_server_ttls.c",
     "eap_server/eap_server_md5.c",
-    "eap_server/eap_server_mschapv2.c",
-    "eap_server/eap_server_gtc.c",
-    "eap_server/eap_server_psk.c",
-    "eap_server/eap_server_pax.c",
-    "eap_server/eap_server_sake.c",
-    "eap_server/eap_server_gpsk.c",
-    "eap_server/eap_server.c",
-    "eap_server/eap_server_identity.c",
-    "eap_server/eap_server_methods.c",
     "eap_server/eap_server_tls_common.c",
 ];
 
@@ -89,14 +57,13 @@ fn build_hostap() {
         println!("cargo:rustc-link-lib=static={sublib}")
     }
 
-    lib_from_objects("methods_both", BOTH_OBJECTS);
     lib_from_objects("methods_peer", PEER_OBJECTS);
     lib_from_objects("methods_server", SERVER_OBJECTS);
 }
 
 fn patch_makefile(sublib: &str) {
     // Newer lld(?) version seem to fail with thin archives
-    eprintln!("Incase of error, try to use ld.gold");
+    eprintln!("In case of error, try to use ld.gold");
 
     let from = "$(AR) crT $@ $?";
     let to = "$(AR) cr $@ $?";

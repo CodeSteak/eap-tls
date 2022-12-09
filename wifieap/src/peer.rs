@@ -10,6 +10,7 @@ use crate::{EapStatus, TlsConfig};
 
 static PEER_INIT: Once = Once::new();
 
+#[derive(Debug, Clone)]
 pub struct EapPeerResult {
     pub status: EapStatus,
     pub response: Option<Vec<u8>>,
