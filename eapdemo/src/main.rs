@@ -2,12 +2,15 @@ use wifieap::{peer::EapPeer, server::EapServer, EapStatus, TlsConfig};
 
 fn main() {
     let mut peer = EapPeer::builder("user")
-        .set_tls_config(TlsConfig::dummy_client())
+        //.set_tls_config(TlsConfig::dummy_client())
+        .set_password("42")
         .build();
 
     let mut server = EapServer::buider()
         .set_tls_config(TlsConfig::dummy_server())
         .allow_tls()
+        .set_password("user", "42")
+        .allow_md5()
         .build();
 
     for i in 0..100 {
