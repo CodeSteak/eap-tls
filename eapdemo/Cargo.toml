@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 wifieap = {path = "../wifieap"}
+eap = {path = "../eap"}

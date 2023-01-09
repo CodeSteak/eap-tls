@@ -1,64 +1,92 @@
+use layers::{
+    auth::{identity::IdentityMethod, md5_challange::MD5ChallengeMethod, AnyMethod},
+    eap_layer::{InnerLayer as AuthInnerLayer, StateResult},
+    AuthLayer, EapLayer,
+};
+use message::Message;
+
+mod layers;
 mod message;
 
-struct EapStateMachine {
-    role: EapRole,
-    state: InternalState,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum InternalState {
-    Discovery,
-    EapAuth,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum EapRole {
-    Peer,
-    Server,
-}
-
-enum EapStatus {
-    Ok,
-    Finished,
-    Failed,
-}
-
-enum EapError {
-    InvalidMessage(message::MessageParseError),
-    Other,
-}
-
-impl From<message::MessageParseError> for EapError {
-    fn from(err: message::MessageParseError) -> Self {
-        Self::InvalidMessage(err)
-    }
-}
-
 trait EapEnvironment {
-    fn received(&self) -> Option<&[u8]>;
-    fn send(&mut self, data: &[u8]);
+    fn set_name(&mut self, name: &[u8]); // <- Extract Somehow
+
+    fn name(&self) -> Option<&[u8]>; // <- Extract Somehow, make generic for Peer/Auth
+
+    fn send(&mut self, message: &[u8]);
 }
 
-impl EapStateMachine {
-    fn new(role: EapRole) -> Self {
+pub struct Authenticator {
+    inner: EapLayer<AuthLayer<AnyMethod>>,
+    buffer: Vec<u8>,
+}
+
+struct AuthenticatorEnv {
+    send_buffer: Option<Vec<u8>>,
+}
+
+impl EapEnvironment for AuthenticatorEnv {
+    fn set_name(&mut self, name: &[u8]) {
+        // TODO
+    }
+
+    fn name(&self) -> Option<&[u8]> {
+        None
+    }
+
+    fn send(&mut self, message: &[u8]) {
+        self.send_buffer = Some(message.to_vec());
+    }
+}
+
+pub struct AuthenticatorStepResult {
+    pub status: AuthenticatorStepStatus,
+    pub response: Option<Vec<u8>>,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub enum AuthenticatorStepStatus {
+    Ok,
+    Error,
+    Finished,
+}
+
+impl Authenticator {
+    pub fn new(password: &str) -> Self {
         Self {
-            role,
-            state: InternalState::Discovery,
+            inner: EapLayer::new(AuthLayer::new(vec![
+                IdentityMethod::new().into(),
+                MD5ChallengeMethod::new(password.as_bytes()).into(),
+            ])),
+            buffer: Vec::new(),
         }
     }
 
-    fn step(&mut self, env: &mut dyn EapEnvironment) -> Result<EapStatus, EapError> {
-        match self.role {
-            EapRole::Peer => self.step_peer(env),
-            EapRole::Server => self.step_server(env),
+    pub fn receive(&mut self, data: &[u8]) {
+        self.buffer = data.to_vec();
+    }
+
+    pub fn step(&mut self) -> AuthenticatorStepResult {
+        let mut env = AuthenticatorEnv { send_buffer: None };
+        let res = if self.buffer.is_empty() {
+            self.inner.start(&mut env)
+        } else {
+            self.inner.receive(&self.buffer, &mut env)
+        };
+
+        match dbg!(res) {
+            StateResult::Ok => AuthenticatorStepResult {
+                status: AuthenticatorStepStatus::Ok,
+                response: env.send_buffer,
+            },
+            StateResult::Finished => AuthenticatorStepResult {
+                status: AuthenticatorStepStatus::Finished,
+                response: env.send_buffer,
+            },
+            StateResult::Failed(_) => AuthenticatorStepResult {
+                status: AuthenticatorStepStatus::Error,
+                response: env.send_buffer,
+            },
         }
-    }
-
-    fn step_peer(&mut self, env: &mut dyn EapEnvironment) -> Result<EapStatus, EapError> {
-        unimplemented!()
-    }
-
-    fn step_server(&mut self, env: &mut dyn EapEnvironment) -> Result<EapStatus, EapError> {
-        unimplemented!()
     }
 }

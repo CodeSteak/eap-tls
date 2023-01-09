@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 binrw = "0.10.0"
+md5 = "0.7.0"
+rand = "0.8.5"
