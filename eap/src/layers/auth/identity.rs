@@ -18,7 +18,7 @@ impl ThisLayer for IdentityMethod {
         METHOD_IDENTITY
     }
 
-    fn start(&mut self, env: &mut dyn EapEnvironment) -> ThisLayerResult {
+    fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
         ThisLayerResult::Send(MessageContent { data: vec![] })
     }
 

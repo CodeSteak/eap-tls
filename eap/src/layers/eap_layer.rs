@@ -1,5 +1,3 @@
-use std::vec;
-
 use crate::{
     message::{Message, MessageCode, MessageContent},
     EapEnvironment,
@@ -29,7 +27,7 @@ pub trait InnerLayer {
 
     fn start(&mut self, env: &mut dyn EapEnvironment) -> InnerLayerResult;
 
-    fn recv(&mut self, msg: Message, env: &mut dyn EapEnvironment) -> InnerLayerResult {
+    fn recv(&mut self, _msg: Message, _env: &mut dyn EapEnvironment) -> InnerLayerResult {
         unimplemented!();
     }
 }
@@ -94,13 +92,13 @@ impl<N: InnerLayer> EapLayer<N> {
                     let res = self.next_layer.recv(msg, env);
                     return self.process_result(res, env);
                 }
-                Err(e) => StateResult::Failed(StateError::InvalidMessage),
+                Err(_e) => StateResult::Failed(StateError::InvalidMessage),
             },
             State::Finished => StateResult::Finished,
         }
     }
 
-    pub fn timeout(&mut self, env: &mut dyn EapEnvironment) -> StateResult {
+    pub fn timeout(&mut self, _env: &mut dyn EapEnvironment) -> StateResult {
         unimplemented!();
     }
 
@@ -191,7 +189,7 @@ mod tests {
             self.sent_messages.push(msg.to_vec());
         }
 
-        fn set_name(&mut self, name: &[u8]) {
+        fn set_name(&mut self, _name: &[u8]) {
             unimplemented!();
         }
 

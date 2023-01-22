@@ -1,14 +1,13 @@
 use layers::{
     auth::{identity::IdentityMethod, md5_challange::MD5ChallengeMethod, AnyMethod},
-    eap_layer::{InnerLayer as AuthInnerLayer, StateResult},
+    eap_layer::StateResult,
     AuthLayer, EapLayer,
 };
-use message::Message;
 
 mod layers;
 mod message;
 
-trait EapEnvironment {
+pub trait EapEnvironment {
     fn set_name(&mut self, name: &[u8]); // <- Extract Somehow
 
     fn name(&self) -> Option<&[u8]>; // <- Extract Somehow, make generic for Peer/Auth
@@ -22,16 +21,26 @@ pub struct Authenticator {
 }
 
 struct AuthenticatorEnv {
+    name: Option<Vec<u8>>,
     send_buffer: Option<Vec<u8>>,
+}
+
+impl AuthenticatorEnv {
+    fn new() -> Self {
+        Self {
+            name: None,
+            send_buffer: None,
+        }
+    }
 }
 
 impl EapEnvironment for AuthenticatorEnv {
     fn set_name(&mut self, name: &[u8]) {
-        // TODO
+        self.name = Some(name.to_vec());
     }
 
     fn name(&self) -> Option<&[u8]> {
-        None
+        self.name.as_deref()
     }
 
     fn send(&mut self, message: &[u8]) {
@@ -67,7 +76,7 @@ impl Authenticator {
     }
 
     pub fn step(&mut self) -> AuthenticatorStepResult {
-        let mut env = AuthenticatorEnv { send_buffer: None };
+        let mut env = AuthenticatorEnv::new();
         let res = if self.buffer.is_empty() {
             self.inner.start(&mut env)
         } else {

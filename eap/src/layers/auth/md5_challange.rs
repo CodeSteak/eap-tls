@@ -6,7 +6,7 @@ use crate::EapEnvironment;
 
 use super::auth_layer::RecvMeta;
 
-const METHOD_MD5_CHALLANGE: u8 = 4;
+const METHOD_MD5_CHALLENGE: u8 = 4;
 
 #[derive(Clone)]
 pub struct MD5ChallengeMethod {
@@ -27,10 +27,10 @@ impl MD5ChallengeMethod {
 
 impl ThisLayer for MD5ChallengeMethod {
     fn method_identifier(&self) -> u8 {
-        METHOD_MD5_CHALLANGE
+        METHOD_MD5_CHALLENGE
     }
 
-    fn start(&mut self, env: &mut dyn EapEnvironment) -> ThisLayerResult {
+    fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
         rand::thread_rng().fill_bytes(&mut self.challange_data);
 
         let mut data = vec![self.challange_data.len() as u8];
@@ -43,7 +43,7 @@ impl ThisLayer for MD5ChallengeMethod {
         &mut self,
         msg: &[u8],
         meta: &RecvMeta,
-        env: &mut dyn EapEnvironment,
+        _env: &mut dyn EapEnvironment,
     ) -> ThisLayerResult {
         let mut hashed_data = Vec::new();
         hashed_data.extend_from_slice(&[meta.message.identifier]);
