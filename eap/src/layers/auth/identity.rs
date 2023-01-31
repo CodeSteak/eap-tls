@@ -5,15 +5,15 @@ use super::auth_layer::{InnerLayer as ThisLayer, InnerResult as ThisLayerResult,
 const METHOD_IDENTITY: u8 = 1;
 
 #[derive(Clone)]
-pub struct IdentityMethod;
+pub struct AuthIdentityMethod;
 
-impl IdentityMethod {
+impl AuthIdentityMethod {
     pub fn new() -> Self {
         Self
     }
 }
 
-impl ThisLayer for IdentityMethod {
+impl ThisLayer for AuthIdentityMethod {
     fn method_identifier(&self) -> u8 {
         METHOD_IDENTITY
     }

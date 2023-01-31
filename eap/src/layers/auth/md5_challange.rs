@@ -9,13 +9,13 @@ use super::auth_layer::RecvMeta;
 const METHOD_MD5_CHALLENGE: u8 = 4;
 
 #[derive(Clone)]
-pub struct MD5ChallengeMethod {
+pub struct AuthMD5ChallengeMethod {
     password: Vec<u8>,
     value: Vec<u8>, // <- Optional
     challange_data: [u8; 16],
 }
 
-impl MD5ChallengeMethod {
+impl AuthMD5ChallengeMethod {
     pub fn new(password: &[u8]) -> Self {
         Self {
             password: password.to_vec(),
@@ -25,7 +25,7 @@ impl MD5ChallengeMethod {
     }
 }
 
-impl ThisLayer for MD5ChallengeMethod {
+impl ThisLayer for AuthMD5ChallengeMethod {
     fn method_identifier(&self) -> u8 {
         METHOD_MD5_CHALLENGE
     }

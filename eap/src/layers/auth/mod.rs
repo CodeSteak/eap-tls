@@ -1,13 +1,16 @@
 mod auth_layer;
 pub use auth_layer::AuthLayer;
 
-pub mod identity;
-pub mod md5_challange;
+mod identity;
+mod md5_challange;
+
+pub use identity::AuthIdentityMethod;
+pub use md5_challange::AuthMD5ChallengeMethod;
 
 #[derive(Clone)]
 pub enum AnyMethod {
-    Identity(identity::IdentityMethod),
-    MD5Challange(md5_challange::MD5ChallengeMethod),
+    Identity(identity::AuthIdentityMethod),
+    MD5Challange(md5_challange::AuthMD5ChallengeMethod),
 }
 
 impl auth_layer::InnerLayer for AnyMethod {
@@ -38,13 +41,13 @@ impl auth_layer::InnerLayer for AnyMethod {
     }
 }
 
-impl Into<AnyMethod> for identity::IdentityMethod {
+impl Into<AnyMethod> for identity::AuthIdentityMethod {
     fn into(self) -> AnyMethod {
         AnyMethod::Identity(self)
     }
 }
 
-impl Into<AnyMethod> for md5_challange::MD5ChallengeMethod {
+impl Into<AnyMethod> for md5_challange::AuthMD5ChallengeMethod {
     fn into(self) -> AnyMethod {
         AnyMethod::MD5Challange(self)
     }

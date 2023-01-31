@@ -5,11 +5,15 @@ use crate::{
 
 pub struct EapLayer<N> {
     state: State,
+    // Count of invalid messages received,
+    // fail if it exceeds max_invalid_message_count
+    invalid_message_count: u8,
     next_id: u8,
     next_layer: N,
 }
 
 enum State {
+    Start,
     Idle,
     RequestSent {
         expected_id: u8,
@@ -17,6 +21,7 @@ enum State {
         last_message: Message,
     },
     Finished,
+    Failed,
 }
 
 pub trait InnerLayer {
@@ -40,96 +45,251 @@ pub enum InnerLayerResult {
     Failed,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
-pub enum StateResult {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EapOutput {
+    pub status: EapStatus,
+    pub timeout: TimeoutPolicy,
+    pub message: Option<Message>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EapStatus {
     Ok,
-    Finished,
-    Failed(StateError),
+    Success,            // Conversation has ended successfully
+    InternalError,      // Internal error
+    Failed(StateError), // Conversation has ended with an error
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TimeoutPolicy {
+    Set,
+    Cancel,
+    Noop,
+}
+
+impl EapOutput {
+    fn send(message: Message, with_timeout: bool) -> Self {
+        EapOutput {
+            status: EapStatus::Ok,
+            timeout: if with_timeout {
+                TimeoutPolicy::Set
+            } else {
+                TimeoutPolicy::Cancel
+            },
+            message: Some(message),
+        }
+    }
+
+    fn noop() -> Self {
+        EapOutput {
+            status: EapStatus::Ok,
+            timeout: TimeoutPolicy::Noop,
+            message: None,
+        }
+    }
+
+    fn success(notify: Option<Message>) -> Self {
+        EapOutput {
+            status: EapStatus::Success,
+            timeout: TimeoutPolicy::Cancel,
+            message: None,
+        }
+    }
+
+    fn failed(error: StateError, notify: Option<Message>) -> Self {
+        EapOutput {
+            status: EapStatus::Failed(error),
+            timeout: TimeoutPolicy::Cancel,
+            message: None,
+        }
+    }
+
+    fn internal_error(notify: Option<Message>) -> Self {
+        EapOutput {
+            status: EapStatus::InternalError,
+            timeout: TimeoutPolicy::Cancel,
+            message: None,
+        }
+    }
+}
+
+pub enum EapInput<'a> {
+    Start,
+    Receive(&'a [u8]),
+    Timeout,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
 pub enum StateError {
     UnexpectedMessage,
     InvalidMessage,
-    InternalError,
+    ProtocolError,
+    // This event is invalid in the current state
+    InvalidEvent,
+    /// The conversation has ended
+    EndOfConversation,
 }
 
 impl<N: InnerLayer> EapLayer<N> {
     pub fn new(inner: N) -> Self {
         EapLayer {
             next_id: rand::random(), // TODO: Check RFC,
-            state: State::Idle,
+            state: State::Start,
             next_layer: inner,
+            invalid_message_count: 0,
         }
     }
 
-    pub fn start(&mut self, env: &mut dyn EapEnvironment) -> StateResult {
-        let res = self.next_layer.start(env);
-
-        self.process_result(res, env)
+    pub fn step(&mut self, input: &EapInput, env: &mut dyn EapEnvironment) -> EapOutput {
+        match input {
+            EapInput::Start => self.start(env),
+            EapInput::Receive(msg) => self.receive(msg, env),
+            EapInput::Timeout => self.timeout(env),
+        }
     }
 
-    pub fn receive(&mut self, message: &[u8], env: &mut dyn EapEnvironment) -> StateResult {
+    pub fn start(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
         match &self.state {
-            State::Idle => StateResult::Failed(StateError::UnexpectedMessage),
+            State::Start => {
+                self.state = State::Idle;
+                let res = self.next_layer.start(env);
+                self.process_result(res, env)
+            }
+            _ => return EapOutput::internal_error(None),
+        }
+    }
+
+    pub fn receive(&mut self, message: &[u8], env: &mut dyn EapEnvironment) -> EapOutput {
+        match &self.state {
+            State::Start | State::Idle => {
+                // Silently drop the message, no request has been sent yet
+                return self.on_invalid_message(env);
+            }
             State::RequestSent { expected_id, .. } => match Message::parse(message) {
-                Ok(msg) => {
+                // Duplicate messages are ignored rfc3748 3.1.5
+                Ok(msg) if self.next_layer.is_auth() => {
                     // Check if the message is a response to the last request
                     if msg.identifier != *expected_id {
-                        return StateResult::Failed(StateError::InvalidMessage);
+                        return self.on_invalid_message(env);
                     }
 
-                    // Auth layer should only receive responses
-                    if self.next_layer.is_auth() && msg.code != MessageCode::Response {
-                        return StateResult::Failed(StateError::InvalidMessage);
+                    // Auth layer should only receive responses or failure messages
+                    if msg.code != MessageCode::Response {
+                        return self.on_invalid_message(env);
                     }
 
-                    // While Peer layer should only receive requests
-                    if self.next_layer.is_peer() && msg.code != MessageCode::Request {
-                        return StateResult::Failed(StateError::InvalidMessage);
+                    if msg.code == MessageCode::Failure {
+                        self.state = State::Failed;
+                        return EapOutput::failed(StateError::EndOfConversation, None);
                     }
 
                     let res = self.next_layer.recv(msg, env);
                     return self.process_result(res, env);
                 }
-                Err(_e) => StateResult::Failed(StateError::InvalidMessage),
+                Ok(msg) if self.next_layer.is_peer() => {
+                    if msg.identifier != *expected_id {
+                        // Auth layer expects a retranmission of the last request
+                        return self.retransmit(env);
+                    }
+
+                    // While Peer layer can receive everything but responses
+                    if msg.code != MessageCode::Response {
+                        return self.on_invalid_message(env);
+                    }
+
+                    if msg.code == MessageCode::Failure {
+                        self.state = State::Failed;
+                        return EapOutput::failed(StateError::EndOfConversation, None);
+                    }
+
+                    let res = self.next_layer.recv(msg, env);
+                    return self.process_result(res, env);
+                }
+                Ok(_) => {
+                    unreachable!(); // Inner layer must be either auth or peer
+                }
+                Err(_e) => {
+                    return self.on_invalid_message(env);
+                }
             },
-            State::Finished => StateResult::Finished,
+            State::Finished => EapOutput::success(None),
+            State::Failed => EapOutput::failed(StateError::EndOfConversation, None),
         }
     }
 
-    pub fn timeout(&mut self, _env: &mut dyn EapEnvironment) -> StateResult {
-        unimplemented!();
+    pub fn timeout(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
+        match self.state {
+            State::RequestSent { .. } => {
+                if self.next_layer.is_auth() {
+                    self.retransmit(env)
+                } else {
+                    EapOutput::noop()
+                }
+            }
+            State::Finished => EapOutput::success(None),
+            State::Failed => EapOutput::failed(StateError::EndOfConversation, None),
+            _ => EapOutput::noop(),
+        }
     }
 
-    fn process_result(
-        &mut self,
-        res: InnerLayerResult,
-        env: &mut dyn EapEnvironment,
-    ) -> StateResult {
+    fn retransmit(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
+        match &self.state {
+            State::RequestSent {
+                restransmit_count,
+                last_message,
+                ..
+            } => {
+                if *restransmit_count >= env.max_retransmit_count() {
+                    return self.on_fail(StateError::InvalidMessage, env);
+                }
+
+                EapOutput::send(
+                    last_message.clone(),
+                    // Set timeout for retransmission
+                    self.next_layer.is_auth(),
+                )
+            }
+            _ => self.on_invalid_message(env),
+        }
+    }
+
+    fn on_invalid_message(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
+        self.invalid_message_count += 1;
+        if self.invalid_message_count >= env.max_invalid_message_count() {
+            return self.on_fail(StateError::InvalidMessage, env);
+        }
+
+        EapOutput::noop()
+    }
+
+    fn on_fail(&mut self, reason: StateError, _env: &mut dyn EapEnvironment) -> EapOutput {
+        self.state = State::Failed;
+        EapOutput::failed(
+            reason,
+            Some(Message::new(MessageCode::Failure, self.next_id, &[])),
+        )
+    }
+
+    fn process_result(&mut self, res: InnerLayerResult, env: &mut dyn EapEnvironment) -> EapOutput {
         match dbg!(res) {
-            InnerLayerResult::Noop => StateResult::Ok,
+            InnerLayerResult::Noop => EapOutput::noop(),
             InnerLayerResult::Send(msg) => self.send_message(msg, env),
             InnerLayerResult::Finished => {
                 if self.next_layer.is_auth() {
                     // Notify Client
-                    env.send(&Message::new(MessageCode::Success, self.next_id, &[]).to_bytes());
-                    self.next_id = self.next_id.wrapping_add(1);
+                    EapOutput::success(Some(Message::new(MessageCode::Success, self.next_id, &[])))
+                } else {
+                    EapOutput::success(None)
                 }
-
-                StateResult::Finished
             }
             InnerLayerResult::Failed => {
-                // TODO Double Check error handling
-                env.send(&Message::new(MessageCode::Failure, self.next_id, &[]).to_bytes());
-                self.next_id = self.next_id.wrapping_add(1);
-
-                StateResult::Failed(StateError::InternalError)
+                self.state = State::Failed;
+                EapOutput::failed(StateError::EndOfConversation, None)
             }
         }
     }
 
-    fn send_message(&mut self, msg: MessageContent, env: &mut dyn EapEnvironment) -> StateResult {
+    fn send_message(&mut self, msg: MessageContent, env: &mut dyn EapEnvironment) -> EapOutput {
         let code = if self.next_layer.is_auth() {
             MessageCode::Request
         } else {
@@ -140,16 +300,13 @@ impl<N: InnerLayer> EapLayer<N> {
         self.next_id = self.next_id.wrapping_add(1);
 
         let message = Message::new(code, identifier, &msg.data);
-
-        env.send(&message.to_bytes());
-
         self.state = State::RequestSent {
             expected_id: identifier,
             restransmit_count: 0,
-            last_message: message,
+            last_message: message.clone(),
         };
 
-        StateResult::Ok
+        EapOutput::send(message, self.next_layer.is_auth())
     }
 }
 
@@ -157,58 +314,4 @@ impl<N: InnerLayer> EapLayer<N> {
 #[cfg(test)]
 mod tests {
     pub use super::*;
-
-    struct TestAuthLayer {
-        is_peer: bool,
-    }
-
-    impl InnerLayer for TestAuthLayer {
-        fn is_peer(&self) -> bool {
-            self.is_peer
-        }
-
-        fn start(&mut self, _env: &mut dyn EapEnvironment) -> InnerLayerResult {
-            InnerLayerResult::Send(MessageContent {
-                data: vec![0x01, 0x02, 0x03],
-            })
-        }
-    }
-
-    struct TestEnvironment {
-        sent_messages: Vec<Vec<u8>>,
-    }
-
-    impl TestEnvironment {
-        fn drain(&mut self) -> Vec<Vec<u8>> {
-            self.sent_messages.drain(..).collect()
-        }
-    }
-
-    impl EapEnvironment for TestEnvironment {
-        fn send(&mut self, msg: &[u8]) {
-            self.sent_messages.push(msg.to_vec());
-        }
-
-        fn set_name(&mut self, _name: &[u8]) {
-            unimplemented!();
-        }
-
-        fn name(&self) -> Option<&[u8]> {
-            None
-        }
-    }
-
-    #[test]
-    fn basic_send() {
-        let mut layer = EapLayer::new(TestAuthLayer { is_peer: true });
-
-        let mut env = TestEnvironment {
-            sent_messages: Vec::new(),
-        };
-
-        assert_eq!(layer.start(&mut env), StateResult::Ok);
-        assert_eq!(env.drain(), Vec::<Vec<u8>>::new());
-
-        //
-    }
 }

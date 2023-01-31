@@ -1,6 +1,6 @@
 use layers::{
-    auth::{identity::IdentityMethod, md5_challange::MD5ChallengeMethod, AnyMethod},
-    eap_layer::StateResult,
+    auth::{AnyMethod, AuthIdentityMethod, AuthMD5ChallengeMethod},
+    eap_layer::EapOutput,
     AuthLayer, EapLayer,
 };
 
@@ -12,7 +12,13 @@ pub trait EapEnvironment {
 
     fn name(&self) -> Option<&[u8]>; // <- Extract Somehow, make generic for Peer/Auth
 
-    fn send(&mut self, message: &[u8]);
+    fn max_invalid_message_count(&self) -> u8 {
+        10 // Some default value
+    }
+
+    fn max_retransmit_count(&self) -> u8 {
+        3 // ~ Suggested by RFC
+    }
 }
 
 pub struct Authenticator {
@@ -42,10 +48,6 @@ impl EapEnvironment for AuthenticatorEnv {
     fn name(&self) -> Option<&[u8]> {
         self.name.as_deref()
     }
-
-    fn send(&mut self, message: &[u8]) {
-        self.send_buffer = Some(message.to_vec());
-    }
 }
 
 pub struct AuthenticatorStepResult {
@@ -64,8 +66,8 @@ impl Authenticator {
     pub fn new(password: &str) -> Self {
         Self {
             inner: EapLayer::new(AuthLayer::new(vec![
-                IdentityMethod::new().into(),
-                MD5ChallengeMethod::new(password.as_bytes()).into(),
+                AuthIdentityMethod::new().into(),
+                AuthMD5ChallengeMethod::new(password.as_bytes()).into(),
             ])),
             buffer: Vec::new(),
         }
@@ -83,19 +85,14 @@ impl Authenticator {
             self.inner.receive(&self.buffer, &mut env)
         };
 
-        match dbg!(res) {
-            StateResult::Ok => AuthenticatorStepResult {
-                status: AuthenticatorStepStatus::Ok,
-                response: env.send_buffer,
+        AuthenticatorStepResult {
+            status: match res.status {
+                layers::eap_layer::EapStatus::Ok => AuthenticatorStepStatus::Ok,
+                layers::eap_layer::EapStatus::Success => AuthenticatorStepStatus::Finished,
+                layers::eap_layer::EapStatus::Failed(_) => AuthenticatorStepStatus::Error,
+                layers::eap_layer::EapStatus::InternalError => AuthenticatorStepStatus::Error,
             },
-            StateResult::Finished => AuthenticatorStepResult {
-                status: AuthenticatorStepStatus::Finished,
-                response: env.send_buffer,
-            },
-            StateResult::Failed(_) => AuthenticatorStepResult {
-                status: AuthenticatorStepStatus::Error,
-                response: env.send_buffer,
-            },
+            response: res.message.map(|m| m.to_bytes()),
         }
     }
 }

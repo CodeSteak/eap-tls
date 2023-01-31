@@ -134,3 +134,48 @@ fn add_message_identifier_to_data(id: u8, data: Vec<u8>) -> Vec<u8> {
     buf.extend_from_slice(&data);
     buf
 }
+
+#[cfg(test)]
+mod tests {
+    /*use crate::layers::auth::identity::AuthIdentityMethod;
+
+    use super::*;
+
+    struct DummyEnv {
+        name: Option<Vec<u8>>,
+    }
+
+    impl DummyEnv {
+        fn new() -> Self {
+            DummyEnv { name: None }
+        }
+    }
+
+    impl EapEnvironment for DummyEnv {
+        fn set_name(&mut self, name: &[u8]) {
+            self.name = Some(name.to_vec());
+        }
+
+        fn name(&self) -> Option<&[u8]> {
+            self.name.as_ref().map(|v| v.as_slice())
+        }
+    }
+
+    #[test]
+    fn test_does_identity() {
+        let mut layer = AuthLayer::new(vec![AuthIdentityMethod::new()]);
+        let mut env = DummyEnv::new();
+
+        assert_eq!(
+            layer.start(&mut env),
+            ThisLayerResult::Send(MessageContent { data: vec![1] })
+        );
+
+        let _ = layer.recv(
+            Message::new(MessageCode::Response, 0x42, &[0x01, 0x02, 0x03]),
+            &mut env,
+        );
+
+        assert_eq!(env.name(), Some(&[0x02, 0x03][..]));
+    }*/
+}
