@@ -17,7 +17,7 @@ enum State {
     Idle,
     RequestSent {
         expected_id: u8,
-        restransmit_count: u8,
+        retransmission_count: u8,
         last_message: Message,
     },
     Finished,
@@ -92,7 +92,7 @@ impl EapOutput {
         EapOutput {
             status: EapStatus::Success,
             timeout: TimeoutPolicy::Cancel,
-            message: None,
+            message: notify,
         }
     }
 
@@ -100,7 +100,7 @@ impl EapOutput {
         EapOutput {
             status: EapStatus::Failed(error),
             timeout: TimeoutPolicy::Cancel,
-            message: None,
+            message: notify,
         }
     }
 
@@ -108,7 +108,7 @@ impl EapOutput {
         EapOutput {
             status: EapStatus::InternalError,
             timeout: TimeoutPolicy::Cancel,
-            message: None,
+            message: notify,
         }
     }
 }
@@ -155,7 +155,7 @@ impl<N: InnerLayer> EapLayer<N> {
                 let res = self.next_layer.start(env);
                 self.process_result(res, env)
             }
-            _ => return EapOutput::internal_error(None),
+            _ => EapOutput::internal_error(None),
         }
     }
 
@@ -163,7 +163,7 @@ impl<N: InnerLayer> EapLayer<N> {
         match &self.state {
             State::Start | State::Idle => {
                 // Silently drop the message, no request has been sent yet
-                return self.on_invalid_message(env);
+                self.on_invalid_message(env)
             }
             State::RequestSent { expected_id, .. } => match Message::parse(message) {
                 // Duplicate messages are ignored rfc3748 3.1.5
@@ -184,7 +184,7 @@ impl<N: InnerLayer> EapLayer<N> {
                     }
 
                     let res = self.next_layer.recv(msg, env);
-                    return self.process_result(res, env);
+                    self.process_result(res, env)
                 }
                 Ok(msg) if self.next_layer.is_peer() => {
                     if msg.identifier != *expected_id {
@@ -202,15 +202,18 @@ impl<N: InnerLayer> EapLayer<N> {
                         return EapOutput::failed(StateError::EndOfConversation, None);
                     }
 
+                    if msg.code == MessageCode::Success {
+                        self.state = State::Finished;
+                        return EapOutput::success(None);
+                    }
+
                     let res = self.next_layer.recv(msg, env);
-                    return self.process_result(res, env);
+                    self.process_result(res, env)
                 }
                 Ok(_) => {
                     unreachable!(); // Inner layer must be either auth or peer
                 }
-                Err(_e) => {
-                    return self.on_invalid_message(env);
-                }
+                Err(_e) => self.on_invalid_message(env),
             },
             State::Finished => EapOutput::success(None),
             State::Failed => EapOutput::failed(StateError::EndOfConversation, None),
@@ -235,11 +238,11 @@ impl<N: InnerLayer> EapLayer<N> {
     fn retransmit(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
         match &self.state {
             State::RequestSent {
-                restransmit_count,
+                retransmission_count,
                 last_message,
                 ..
             } => {
-                if *restransmit_count >= env.max_retransmit_count() {
+                if *retransmission_count >= env.max_retransmit_count() {
                     return self.on_fail(StateError::InvalidMessage, env);
                 }
 
@@ -275,6 +278,7 @@ impl<N: InnerLayer> EapLayer<N> {
             InnerLayerResult::Noop => EapOutput::noop(),
             InnerLayerResult::Send(msg) => self.send_message(msg, env),
             InnerLayerResult::Finished => {
+                self.state = State::Finished;
                 if self.next_layer.is_auth() {
                     // Notify Client
                     EapOutput::success(Some(Message::new(MessageCode::Success, self.next_id, &[])))
@@ -302,7 +306,7 @@ impl<N: InnerLayer> EapLayer<N> {
         let message = Message::new(code, identifier, &msg.data);
         self.state = State::RequestSent {
             expected_id: identifier,
-            restransmit_count: 0,
+            retransmission_count: 0,
             last_message: message.clone(),
         };
 
