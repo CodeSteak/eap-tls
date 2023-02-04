@@ -12,12 +12,16 @@ pub trait EapEnvironment {
 
     fn name(&self) -> Option<&[u8]>; // <- Extract Somehow, make generic for Peer/Auth
 
-    fn max_invalid_message_count(&self) -> u8 {
+    fn max_invalid_message_count(&self) -> u16 {
         10 // Some default value
     }
 
-    fn max_retransmit_count(&self) -> u8 {
-        3 // ~ Suggested by RFC
+    fn max_retransmit_count(&self) -> u16 {
+        4 // 3~5 Suggested by RFC
+    }
+
+    fn max_timeout_count(&self) -> u16 {
+        10 // Some default value
     }
 }
 

@@ -8,6 +8,14 @@ pub struct MessageContent {
     pub data: Vec<u8>,
 }
 
+impl MessageContent {
+    pub fn new(data: &[u8]) -> Self {
+        Self {
+            data: data.to_vec(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Message {
     pub code: MessageCode,

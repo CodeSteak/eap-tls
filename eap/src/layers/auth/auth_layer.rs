@@ -88,6 +88,10 @@ impl<I: InnerLayer> ThisLayer for AuthLayer<I> {
             .recv(&msg.data[1..], &RecvMeta { message: &msg }, env);
         self.process_result(res, env)
     }
+
+    fn can_succeed(&self) -> bool {
+        panic!("Assertion failed, Auth Layer instantiates EAP success")
+    }
 }
 
 impl<I: InnerLayer> AuthLayer<I> {

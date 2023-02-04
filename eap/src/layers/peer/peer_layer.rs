@@ -45,6 +45,10 @@ impl<I: InnerLayer> ThisLayer for PeerLayer<I> {
         true
     }
 
+    fn can_succeed(&self) -> bool {
+        unimplemented!();
+    }
+
     fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
         // NOP, Authenticator will send a Request
         ThisLayerResult::Noop
