@@ -5,7 +5,7 @@ use crate::{
     EapEnvironment,
 };
 
-use crate::layers::eap_layer::{InnerLayer as ThisLayer, InnerLayerResult as ThisLayerResult};
+use crate::layers::eap_layer::{InnerLayer as ThisLayer, InnerLayerOutput as ThisLayerResult};
 
 pub struct AuthLayer<I: InnerLayer> {
     state: State,

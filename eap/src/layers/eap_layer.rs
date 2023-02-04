@@ -30,15 +30,28 @@ pub trait InnerLayer {
         !self.is_peer()
     }
 
-    fn start(&mut self, env: &mut dyn EapEnvironment) -> InnerLayerResult;
+    fn step(&mut self, input: InnerLayerInput, env: &mut dyn EapEnvironment) -> InnerLayerOutput {
+        match input {
+            InnerLayerInput::Start => self.start(env),
+            InnerLayerInput::Recv(msg) => self.recv(msg, env),
+        }
+    }
 
-    fn recv(&mut self, _msg: Message, _env: &mut dyn EapEnvironment) -> InnerLayerResult {
+    fn start(&mut self, env: &mut dyn EapEnvironment) -> InnerLayerOutput;
+
+    fn recv(&mut self, _msg: Message, _env: &mut dyn EapEnvironment) -> InnerLayerOutput {
         unimplemented!();
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum InnerLayerResult {
+pub enum InnerLayerInput {
+    Start,
+    Recv(Message),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum InnerLayerOutput {
     Noop,
     Send(MessageContent),
     Finished,
@@ -273,11 +286,11 @@ impl<N: InnerLayer> EapLayer<N> {
         )
     }
 
-    fn process_result(&mut self, res: InnerLayerResult, env: &mut dyn EapEnvironment) -> EapOutput {
+    fn process_result(&mut self, res: InnerLayerOutput, env: &mut dyn EapEnvironment) -> EapOutput {
         match dbg!(res) {
-            InnerLayerResult::Noop => EapOutput::noop(),
-            InnerLayerResult::Send(msg) => self.send_message(msg, env),
-            InnerLayerResult::Finished => {
+            InnerLayerOutput::Noop => EapOutput::noop(),
+            InnerLayerOutput::Send(msg) => self.send_message(msg, env),
+            InnerLayerOutput::Finished => {
                 self.state = State::Finished;
                 if self.next_layer.is_auth() {
                     // Notify Client
@@ -286,7 +299,7 @@ impl<N: InnerLayer> EapLayer<N> {
                     EapOutput::success(None)
                 }
             }
-            InnerLayerResult::Failed => {
+            InnerLayerOutput::Failed => {
                 self.state = State::Failed;
                 EapOutput::failed(StateError::EndOfConversation, None)
             }
@@ -317,5 +330,48 @@ impl<N: InnerLayer> EapLayer<N> {
 // Unit tests
 #[cfg(test)]
 mod tests {
+    use crate::DefaultEnvironment;
+
     pub use super::*;
+
+    type DummyPeerLayer<F> = DummyInnerLayer<false, F>;
+    type DummyAuthLayer<F> = DummyInnerLayer<true, F>;
+
+    struct DummyInnerLayer<const AUTH: bool, F> {
+        process: F,
+    }
+
+    impl<const AUTH: bool, F> DummyInnerLayer<AUTH, F> {
+        pub fn new(process: F) -> Self {
+            Self { process }
+        }
+    }
+
+    impl<const AUTH: bool, F> InnerLayer for DummyInnerLayer<AUTH, F>
+    where
+        F: Fn(&InnerLayerInput, &mut dyn EapEnvironment) -> InnerLayerOutput,
+    {
+        fn is_auth(&self) -> bool {
+            AUTH
+        }
+
+        fn is_peer(&self) -> bool {
+            !AUTH
+        }
+
+        fn start(&mut self, env: &mut dyn EapEnvironment) -> InnerLayerOutput {
+            (self.process)(&InnerLayerInput::Start, env)
+        }
+
+        fn recv(&mut self, msg: Message, env: &mut dyn EapEnvironment) -> InnerLayerOutput {
+            (self.process)(&InnerLayerInput::Recv(msg), env)
+        }
+    }
+
+    #[test]
+    fn test_garbage_in() {
+        let mut env = DefaultEnvironment::new();
+
+        // TODO;
+    }
 }

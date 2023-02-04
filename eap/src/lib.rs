@@ -22,25 +22,22 @@ pub trait EapEnvironment {
 }
 
 pub struct Authenticator {
+    env: DefaultEnvironment,
     inner: EapLayer<AuthLayer<AnyMethod>>,
     buffer: Vec<u8>,
 }
 
-struct AuthenticatorEnv {
+struct DefaultEnvironment {
     name: Option<Vec<u8>>,
-    send_buffer: Option<Vec<u8>>,
 }
 
-impl AuthenticatorEnv {
+impl DefaultEnvironment {
     fn new() -> Self {
-        Self {
-            name: None,
-            send_buffer: None,
-        }
+        Self { name: None }
     }
 }
 
-impl EapEnvironment for AuthenticatorEnv {
+impl EapEnvironment for DefaultEnvironment {
     fn set_name(&mut self, name: &[u8]) {
         self.name = Some(name.to_vec());
     }
@@ -69,6 +66,7 @@ impl Authenticator {
                 AuthIdentityMethod::new().into(),
                 AuthMD5ChallengeMethod::new(password.as_bytes()).into(),
             ])),
+            env: DefaultEnvironment::new(),
             buffer: Vec::new(),
         }
     }
@@ -78,11 +76,16 @@ impl Authenticator {
     }
 
     pub fn step(&mut self) -> AuthenticatorStepResult {
-        let mut env = AuthenticatorEnv::new();
-        let res = if self.buffer.is_empty() {
-            self.inner.start(&mut env)
+        let Self {
+            inner, //
+            env,   //
+            buffer,
+        } = self;
+
+        let res = if buffer.is_empty() {
+            inner.start(env)
         } else {
-            self.inner.receive(&self.buffer, &mut env)
+            inner.receive(buffer, env)
         };
 
         AuthenticatorStepResult {
