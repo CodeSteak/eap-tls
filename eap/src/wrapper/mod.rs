@@ -13,10 +13,10 @@ mod tests {
     fn run(
         peer: &mut Peer,
         auth: &mut Authenticator,
-        package_drop_rate: Option<f32>,
+        package_drop_rate: Option<(f32, u64)>,
     ) -> (PeerStepStatus, AuthenticatorStepStatus) {
-        let package_drop_rate = package_drop_rate.unwrap_or(0.0);
-        let mut rng = StdRng::seed_from_u64(package_drop_rate.to_bits() as u64 ^ 0xdeadbeef);
+        let (package_drop_rate, seed) = package_drop_rate.unwrap_or((0.0, 0));
+        let mut rng = StdRng::seed_from_u64(package_drop_rate.to_bits() as u64 ^ 0xdeadbeef ^ seed);
 
         for _ in 0..1000 {
             let peer_res = peer.step();
@@ -72,10 +72,38 @@ mod tests {
         let mut peer = Peer::new("testuser", "pasword123");
         let mut auth = Authenticator::new("pasword123");
 
-        let (peer_res, auth_res) = run(&mut peer, &mut auth, Some(0.5));
+        let (peer_res, auth_res) = run(&mut peer, &mut auth, Some((0.5, 4808468)));
 
         assert_eq!(peer_res, PeerStepStatus::Finished);
         assert_eq!(auth_res, AuthenticatorStepStatus::Finished);
+    }
+
+    #[test]
+    fn test_success_rate_on_losses() {
+        let mut success = 0;
+        let tries = 100;
+
+        for i in 0..tries {
+            let mut peer = Peer::new("testuser", "pasword123");
+            let mut auth = Authenticator::new("pasword123");
+
+            let (peer_res, auth_res) = run(&mut peer, &mut auth, Some((0.5, i)));
+
+            match (peer_res, auth_res) {
+                (PeerStepStatus::Finished, AuthenticatorStepStatus::Finished) => success += 1,
+                (PeerStepStatus::Error, AuthenticatorStepStatus::Error) => {}
+                (PeerStepStatus::Error, AuthenticatorStepStatus::Finished) => {
+                    // Success packet was lost
+                }
+                _ => {
+                    panic!("Unexpected result: ({peer_res:?}, {auth_res:?})");
+                }
+            }
+        }
+
+        dbg!(success, tries);
+
+        assert!(success as f32 > tries as f32 * 0.25);
     }
 
     #[test]
@@ -83,7 +111,7 @@ mod tests {
         let mut peer = Peer::new("testuser", "pasword123");
         let mut auth = Authenticator::new("pasword123");
 
-        let (peer_res, auth_res) = run(&mut peer, &mut auth, Some(0.9)); // Drop ~ all packages
+        let (peer_res, auth_res) = run(&mut peer, &mut auth, Some((0.9, 6211651))); // Drop ~ all packages
 
         assert_eq!(peer_res, PeerStepStatus::Error);
         assert_eq!(auth_res, AuthenticatorStepStatus::Error);
