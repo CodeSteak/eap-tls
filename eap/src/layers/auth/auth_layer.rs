@@ -63,7 +63,7 @@ impl<I: InnerLayer> ThisLayer for AuthLayer<I> {
             return ThisLayerResult::Failed;
         }
 
-        if msg.data.len() <= 1 {
+        if msg.data.is_empty() {
             // Message Too Short
             return ThisLayerResult::Failed;
         }

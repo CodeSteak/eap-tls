@@ -81,7 +81,7 @@ impl<I: InnerLayer> ThisLayer for PeerLayer<I> {
             }
         }
 
-        if msg.data.len() < 1 {
+        if msg.data.is_empty() {
             // Message Too Short
             return ThisLayerResult::Failed;
         }

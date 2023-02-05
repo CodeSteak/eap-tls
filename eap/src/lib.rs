@@ -6,6 +6,7 @@ use layers::{
 
 mod layers;
 mod message;
+pub mod util;
 
 pub trait EapEnvironment {
     fn set_name(&mut self, name: &[u8]); // <- Extract Somehow

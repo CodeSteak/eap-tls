@@ -32,3 +32,32 @@ impl ThisLayer for AuthIdentityMethod {
         ThisLayerResult::NextLayer
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::message::Message;
+
+    use super::*;
+
+    #[test]
+    fn auth_identity_method() {
+        let mut env = crate::DefaultEnvironment::new();
+        let mut method = AuthIdentityMethod::new();
+        assert_eq!(method.method_identifier(), METHOD_IDENTITY);
+        assert_eq!(
+            method.start(&mut env),
+            ThisLayerResult::Send(MessageContent { data: vec![] })
+        );
+
+        let m = Message::new(crate::message::MessageCode::Response, 0, b"bob");
+        assert_eq!(
+            method.recv(b"bob", &RecvMeta {
+                message: &m,
+            }, &mut env),
+            ThisLayerResult::NextLayer
+        );
+        
+        assert_eq!(env.name(), Some(&b"bob"[..]));
+    }
+
+}
