@@ -7,8 +7,10 @@ use crate::{
 
 use crate::layers::eap_layer::{InnerLayer as ThisLayer, InnerLayerOutput as ThisLayerResult};
 
+#[derive(Clone)]
 pub struct AuthLayer<I: InnerLayer> {
     state: State,
+    peer_has_sent_nak: bool, // RFC allows only one NAK per session
     next_layer: I,
     candidates: Vec<I>, // <- should be okay for now
 }
@@ -17,6 +19,7 @@ pub enum AuthResult {
     Ok,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum State {
     Default,
     Finished,
@@ -55,18 +58,24 @@ impl<I: InnerLayer> ThisLayer for AuthLayer<I> {
         self.process_result(res, env)
     }
 
-    fn recv(&mut self, msg: Message, env: &mut dyn EapEnvironment) -> ThisLayerResult {
+    fn recv(&mut self, msg: &Message, env: &mut dyn EapEnvironment) -> ThisLayerResult {
         if msg.code != MessageCode::Response {
             return ThisLayerResult::Failed;
         }
 
-        if msg.data.len() < 1 {
+        if msg.data.len() <= 1 {
             // Message Too Short
             return ThisLayerResult::Failed;
         }
 
         let method_identifier = msg.data[0];
         if method_identifier == METHOD_CLIENT_PROPOSAL {
+            if self.peer_has_sent_nak {
+                // Protocol Violation
+                return ThisLayerResult::Failed;
+            }
+            self.peer_has_sent_nak = true;
+
             for candidate in self.candidates.iter() {
                 if msg.data[1..].contains(&candidate.method_identifier()) {
                     self.next_layer = candidate.clone();
@@ -86,6 +95,7 @@ impl<I: InnerLayer> ThisLayer for AuthLayer<I> {
         let res = self
             .next_layer
             .recv(&msg.data[1..], &RecvMeta { message: &msg }, env);
+
         self.process_result(res, env)
     }
 
@@ -96,11 +106,12 @@ impl<I: InnerLayer> ThisLayer for AuthLayer<I> {
 
 impl<I: InnerLayer> AuthLayer<I> {
     pub fn new(candidates: Vec<I>) -> Self {
-        assert!(candidates.len() > 0);
+        assert!(!candidates.is_empty());
         AuthLayer {
             state: State::Default {},
             next_layer: candidates[0].clone(),
-            candidates: candidates,
+            candidates,
+            peer_has_sent_nak: false,
         }
     }
 
@@ -109,7 +120,7 @@ impl<I: InnerLayer> AuthLayer<I> {
         res: InnerResult,
         env: &mut dyn EapEnvironment,
     ) -> ThisLayerResult {
-        match dbg!(res) {
+        match res {
             InnerResult::Noop => ThisLayerResult::Noop,
             InnerResult::Send(msg) => {
                 let id = self.next_layer.method_identifier();
@@ -141,45 +152,165 @@ fn add_message_identifier_to_data(id: u8, data: Vec<u8>) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    /*use crate::layers::auth::identity::AuthIdentityMethod;
+
+    use crate::DefaultEnvironment;
 
     use super::*;
 
-    struct DummyEnv {
-        name: Option<Vec<u8>>,
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    struct DummyProtocol {
+        method_identifier: u8,
+        events: Vec<InnerResult>,
     }
 
-    impl DummyEnv {
-        fn new() -> Self {
-            DummyEnv { name: None }
+    impl DummyProtocol {
+        fn new(method_identifier: u8, events: &[InnerResult]) -> Self {
+            DummyProtocol {
+                method_identifier,
+                events: events.to_vec(),
+            }
         }
     }
 
-    impl EapEnvironment for DummyEnv {
-        fn set_name(&mut self, name: &[u8]) {
-            self.name = Some(name.to_vec());
+    impl InnerLayer for DummyProtocol {
+        fn method_identifier(&self) -> u8 {
+            self.method_identifier
         }
 
-        fn name(&self) -> Option<&[u8]> {
-            self.name.as_ref().map(|v| v.as_slice())
+        fn start(&mut self, _env: &mut dyn EapEnvironment) -> InnerResult {
+            self.events.remove(0)
+        }
+
+        fn recv(
+            &mut self,
+            _msg: &[u8],
+            _meta: &RecvMeta,
+            _env: &mut dyn EapEnvironment,
+        ) -> InnerResult {
+            self.events.remove(0)
         }
     }
 
     #[test]
-    fn test_does_identity() {
-        let mut layer = AuthLayer::new(vec![AuthIdentityMethod::new()]);
-        let mut env = DummyEnv::new();
+    fn auth_layer_is_auth() {
+        let layer = AuthLayer::new(vec![DummyProtocol::new(1, &[])]);
+        assert!(!layer.is_peer());
+        assert!(layer.is_auth());
+    }
 
+    #[test]
+    fn auth_layer_error_and_normal() {
+        let mut env = DefaultEnvironment::new();
+        let mut layer = AuthLayer::new(vec![
+            DummyProtocol::new(
+                1,
+                &[
+                    InnerResult::Send(MessageContent {
+                        data: b"username?".to_vec(),
+                    }),
+                    InnerResult::NextLayer,
+                ],
+            ),
+            DummyProtocol::new(
+                2,
+                &[
+                    InnerResult::Send(MessageContent {
+                        data: b"unsupported".to_vec(),
+                    }),
+                    InnerResult::Failed,
+                ],
+            ),
+            DummyProtocol::new(
+                4,
+                &[
+                    InnerResult::Send(MessageContent {
+                        data: b"right".to_vec(),
+                    }),
+                    InnerResult::Finished,
+                ],
+            ),
+            DummyProtocol::new(
+                5,
+                &[InnerResult::Send(MessageContent {
+                    data: b"don't select me".to_vec(),
+                })],
+            ),
+        ]);
+
+        //  Auth inits conversation
         assert_eq!(
             layer.start(&mut env),
-            ThisLayerResult::Send(MessageContent { data: vec![1] })
+            ThisLayerResult::Send(MessageContent {
+                data: b"\x01username?".to_vec()
+            }),
         );
 
-        let _ = layer.recv(
-            Message::new(MessageCode::Response, 0x42, &[0x01, 0x02, 0x03]),
-            &mut env,
+        {
+            // Alternative Reality
+            let mut layer = layer.clone();
+            // Peer responds with unsupported method
+            assert_eq!(
+                layer.recv(
+                    &Message::new(MessageCode::Response, 0, b"\x04wrong method"),
+                    &mut env,
+                ),
+                ThisLayerResult::Failed,
+            );
+        }
+
+        // Peer responds
+        assert_eq!(
+            layer.recv(
+                &Message::new(MessageCode::Response, 0, b"\x01bob"),
+                &mut env,
+            ),
+            ThisLayerResult::Send(MessageContent {
+                data: b"\x02unsupported".to_vec()
+            }),
         );
 
-        assert_eq!(env.name(), Some(&[0x02, 0x03][..]));
-    }*/
+        {
+            // Alternative Reality
+            let mut layer = layer.clone();
+            // Peer NAKs with unsupported method
+            assert_eq!(
+                layer.recv(
+                    &Message::new(MessageCode::Response, 0, b"\x03\x07"),
+                    &mut env,
+                ),
+                ThisLayerResult::Failed,
+            );
+        }
+
+        // Peer sends NAK, wants to try method 5 or 4
+        assert_eq!(
+            layer.recv(
+                &Message::new(MessageCode::Response, 0, b"\x03\x06\x05\x04"),
+                &mut env,
+            ),
+            // We configured 4
+            ThisLayerResult::Send(MessageContent {
+                data: b"\x04right".to_vec()
+            }),
+        );
+
+        {
+            // Alternative Reality
+            let mut layer = layer.clone();
+            // Peers resends NAK (illegal)
+            assert_eq!(
+                layer.recv(
+                    &Message::new(MessageCode::Response, 0, b"\x03\x04"),
+                    &mut env,
+                ),
+                ThisLayerResult::Failed,
+            );
+        }
+
+        // Peer responds
+        assert_eq!(
+            layer.recv(&Message::new(MessageCode::Response, 0, b"\x04"), &mut env,),
+            ThisLayerResult::Finished,
+        );
+    }
 }

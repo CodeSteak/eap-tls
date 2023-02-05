@@ -54,7 +54,7 @@ impl<I: InnerLayer> ThisLayer for PeerLayer<I> {
         ThisLayerResult::Noop
     }
 
-    fn recv(&mut self, msg: Message, env: &mut dyn EapEnvironment) -> ThisLayerResult {
+    fn recv(&mut self, msg: &Message, env: &mut dyn EapEnvironment) -> ThisLayerResult {
         match msg.code {
             MessageCode::Request => { /* Expected */ }
             MessageCode::Response => {

@@ -36,15 +36,13 @@ pub trait InnerLayer {
     fn step(&mut self, input: InnerLayerInput, env: &mut dyn EapEnvironment) -> InnerLayerOutput {
         match input {
             InnerLayerInput::Start => self.start(env),
-            InnerLayerInput::Recv(msg) => self.recv(msg, env),
+            InnerLayerInput::Recv(msg) => self.recv(&msg, env),
         }
     }
 
     fn start(&mut self, env: &mut dyn EapEnvironment) -> InnerLayerOutput;
 
-    fn recv(&mut self, _msg: Message, _env: &mut dyn EapEnvironment) -> InnerLayerOutput {
-        unimplemented!();
-    }
+    fn recv(&mut self, _msg: &Message, _env: &mut dyn EapEnvironment) -> InnerLayerOutput;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -187,7 +185,7 @@ impl<N: InnerLayer> EapLayer<N> {
                     Ok(msg) if msg.code == MessageCode::Request => {
                         self.invalid_message_count = 0;
                         self.next_id = msg.identifier;
-                        let res = self.next_layer.recv(msg, env);
+                        let res = self.next_layer.recv(&msg, env);
                         self.process_result(res, env)
                     }
                     Ok(msg) if msg.code == MessageCode::Failure => {
@@ -216,7 +214,7 @@ impl<N: InnerLayer> EapLayer<N> {
                         return EapOutput::failed(StateError::EndOfConversation, None);
                     }
 
-                    let res = self.next_layer.recv(msg, env);
+                    let res = self.next_layer.recv(&msg, env);
                     self.process_result(res, env)
                 }
                 Ok(msg) if self.next_layer.is_peer() => {
@@ -246,7 +244,7 @@ impl<N: InnerLayer> EapLayer<N> {
                         return EapOutput::success(None);
                     }
 
-                    let res = self.next_layer.recv(msg, env);
+                    let res = self.next_layer.recv(&msg, env);
                     self.process_result(res, env)
                 }
                 Ok(_) => {
@@ -412,7 +410,7 @@ mod tests {
             }
         }
 
-        fn recv(&mut self, msg: Message, env: &mut dyn EapEnvironment) -> InnerLayerOutput {
+        fn recv(&mut self, msg: &Message, env: &mut dyn EapEnvironment) -> InnerLayerOutput {
             if self.is_auth {
                 assert_eq!(msg.code, MessageCode::Response);
             } else {
