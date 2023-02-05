@@ -1,7 +1,7 @@
 use lazy_static::__Deref;
 use std::{
     collections::HashMap,
-    ffi::{c_void, CStr},
+    ffi::{c_void, CStr, CString},
     sync::Once,
 };
 
@@ -294,15 +294,17 @@ impl Drop for EapPeer {
 struct WpaBlobEntry {
     name: String,
     _data: Box<[u8]>,
+    _cstr: CString,
     blob: Box<wpa_config_blob>,
 }
 
 impl WpaBlobEntry {
     pub fn new(name: &str, data: &[u8]) -> Self {
         let name = name.to_string();
+        let cstr = CString::new(name.as_str()).unwrap();
         let data = data.to_vec().into_boxed_slice();
         let blob = Box::new(wpa_config_blob {
-            name: name.as_str().as_ptr() as *const i8 as *mut i8,
+            name: cstr.as_ptr() as *mut i8,
             data: data.as_ptr() as *const u8 as *mut u8,
             len: data.len(),
             next: std::ptr::null_mut(),
@@ -311,6 +313,7 @@ impl WpaBlobEntry {
         Self {
             name,
             _data: data,
+            _cstr: cstr,
             blob,
         }
     }
