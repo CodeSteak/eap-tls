@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -ev
 # https://legacy.thomas-leister.de/eine-eigene-openssl-ca-erstellen-und-zertifikate-ausstellen/
 
@@ -20,4 +22,4 @@ openssl genrsa -out client-key.pem 2048
 openssl req -new -key client-key.pem -out client.csr -sha512
 openssl x509 -req -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out client-cert.pem -days 36500 -sha512
 
-
+./convert_to_asn1.sh

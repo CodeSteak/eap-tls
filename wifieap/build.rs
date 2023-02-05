@@ -8,7 +8,7 @@ const SOURCE_DIR: &str = "./hostap/src/";
 const SOURCE_LIBS: &[&str] = &[
     "ap",
     "common",
-    "crypto",
+    // "crypto",
     "eap_common",
     "eapol_auth",
     "eapol_supp",
@@ -17,7 +17,7 @@ const SOURCE_LIBS: &[&str] = &[
     "l2_packet",
     "radius",
     "rsn_supp",
-    "tls",
+    // "tls",
     "utils",
     "wps",
 ];
@@ -37,6 +37,13 @@ const SERVER_OBJECTS: &[&str] = &[
     "eap_server/eap_server_tls_common.c",
 ];
 
+// adapted from hostapd Makefile
+const OPENSSL_OBJECTS: &[&str] = &[
+    "crypto/tls_openssl.c",    //
+    "crypto/crypto_openssl.c", //
+    "crypto/random.c",         //
+];
+
 fn main() {
     build_hostap();
     bindgen_hostap();
@@ -44,6 +51,7 @@ fn main() {
 
 fn build_hostap() {
     Command::new("make")
+        .arg("CONFIG_TLSV12=y")
         .current_dir(SOURCE_DIR)
         .status()
         .expect("Failed running make to build");
@@ -57,8 +65,13 @@ fn build_hostap() {
         println!("cargo:rustc-link-lib=static={sublib}")
     }
 
+    // Link to openssl
+    println!("cargo:rustc-link-lib=dylib=ssl");
+    println!("cargo:rustc-link-lib=dylib=crypto");
+
     lib_from_objects("methods_peer", PEER_OBJECTS);
     lib_from_objects("methods_server", SERVER_OBJECTS);
+    lib_from_objects("openssl_wrapper", OPENSSL_OBJECTS);
 }
 
 fn patch_makefile(sublib: &str) {
@@ -95,6 +108,7 @@ fn lib_from_objects(label: &str, files: &[&str]) {
     let mut build = cc::Build::new();
     build.warnings(false);
     build.flag("-w");
+    build.flag("-DTLS_DEFAULT_CIPHERS=\"DEFAULT\"");
 
     for f in files {
         build.file(PathBuf::from(SOURCE_DIR).join(f).canonicalize().unwrap());
