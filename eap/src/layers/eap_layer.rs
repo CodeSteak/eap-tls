@@ -144,6 +144,21 @@ impl<N: InnerLayer> EapLayer<N> {
     }
 
     #[allow(unused)]
+    pub fn has_started(&self) -> bool {
+        !matches!(self.state, State::Start)
+    }
+
+    #[allow(unused)]
+    pub fn is_finished(&self) -> bool {
+        matches!(self.state, State::Finished)
+    }
+
+    #[allow(unused)]
+    pub fn is_failed(&self) -> bool {
+        matches!(self.state, State::Failed)
+    }
+
+    #[allow(unused)]
     /// Note: If there is no event to process after a certain amount of time, send a timeout event
     /// to the state machine. This Timeout should be a few milliseconds. Too many Timeout will
     /// cause the state machine to fail. This value can be adjusted in the environment.
@@ -278,7 +293,7 @@ impl<N: InnerLayer> EapLayer<N> {
             );
         }
 
-        EapOutput::success(None)
+        EapOutput::noop()
     }
 
     fn retransmit(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {

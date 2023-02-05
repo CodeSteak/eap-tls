@@ -60,7 +60,8 @@ impl<I: PeerInnerLayer> ThisLayer for PeerLayer<I> {
     }
 
     fn can_succeed(&self) -> bool {
-        unimplemented!();
+        // TODO: FIX ME
+        true
     }
 
     fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
