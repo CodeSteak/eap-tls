@@ -9,6 +9,7 @@ pub struct MessageContent {
 }
 
 impl MessageContent {
+    #[allow(unused)]
     pub fn new(data: &[u8]) -> Self {
         Self {
             data: data.to_vec(),

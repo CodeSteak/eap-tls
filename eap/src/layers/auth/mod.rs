@@ -13,7 +13,7 @@ pub enum AnyMethod {
     MD5Challange(md5_challange::AuthMD5ChallengeMethod),
 }
 
-impl auth_layer::InnerLayer for AnyMethod {
+impl auth_layer::AuthInnerLayer for AnyMethod {
     fn method_identifier(&self) -> u8 {
         match self {
             AnyMethod::Identity(inner) => inner.method_identifier(),
@@ -21,7 +21,7 @@ impl auth_layer::InnerLayer for AnyMethod {
         }
     }
 
-    fn start(&mut self, env: &mut dyn crate::EapEnvironment) -> auth_layer::InnerResult {
+    fn start(&mut self, env: &mut dyn crate::EapEnvironment) -> auth_layer::AuthInnerLayerResult {
         match self {
             AnyMethod::Identity(inner) => inner.start(env),
             AnyMethod::MD5Challange(inner) => inner.start(env),
@@ -33,7 +33,7 @@ impl auth_layer::InnerLayer for AnyMethod {
         msg: &[u8],
         meta: &auth_layer::RecvMeta,
         env: &mut dyn crate::EapEnvironment,
-    ) -> auth_layer::InnerResult {
+    ) -> auth_layer::AuthInnerLayerResult {
         match self {
             AnyMethod::Identity(inner) => inner.recv(msg, meta, env),
             AnyMethod::MD5Challange(inner) => inner.recv(msg, meta, env),

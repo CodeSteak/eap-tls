@@ -1,6 +1,8 @@
 use crate::{message::MessageContent, EapEnvironment};
 
-use super::auth_layer::{InnerLayer as ThisLayer, InnerResult as ThisLayerResult, RecvMeta};
+use super::auth_layer::{
+    AuthInnerLayer as ThisLayer, AuthInnerLayerResult as ThisLayerResult, RecvMeta,
+};
 
 const METHOD_IDENTITY: u8 = 1;
 
@@ -31,6 +33,10 @@ impl ThisLayer for AuthIdentityMethod {
         env.set_name(msg);
         ThisLayerResult::NextLayer
     }
+
+    fn selectable_by_nak(&self) -> bool {
+        false
+    }
 }
 
 #[cfg(test)]
@@ -51,13 +57,10 @@ mod tests {
 
         let m = Message::new(crate::message::MessageCode::Response, 0, b"bob");
         assert_eq!(
-            method.recv(b"bob", &RecvMeta {
-                message: &m,
-            }, &mut env),
+            method.recv(b"bob", &RecvMeta { message: &m }, &mut env),
             ThisLayerResult::NextLayer
         );
-        
+
         assert_eq!(env.name(), Some(&b"bob"[..]));
     }
-
 }

@@ -8,7 +8,7 @@ use crate::{
 use crate::layers::eap_layer::{InnerLayer as ThisLayer, InnerLayerOutput as ThisLayerResult};
 
 #[derive(Clone)]
-pub struct AuthLayer<I: InnerLayer> {
+pub struct AuthLayer<I: AuthInnerLayer> {
     peer_has_sent_nak: bool, // RFC allows only one NAK per session
     next_layer: I,
     candidates: Vec<I>, // <- should be okay for now
@@ -20,21 +20,29 @@ pub struct RecvMeta<'a> {
     pub message: &'a Message,
 }
 
-pub trait InnerLayer: Clone {
+pub trait AuthInnerLayer: Clone {
     fn method_identifier(&self) -> u8;
-    fn start(&mut self, env: &mut dyn EapEnvironment) -> InnerResult;
-    fn recv(&mut self, msg: &[u8], meta: &RecvMeta, env: &mut dyn EapEnvironment) -> InnerResult;
+    fn start(&mut self, env: &mut dyn EapEnvironment) -> AuthInnerLayerResult;
+    fn recv(
+        &mut self,
+        msg: &[u8],
+        meta: &RecvMeta,
+        env: &mut dyn EapEnvironment,
+    ) -> AuthInnerLayerResult;
+    fn selectable_by_nak(&self) -> bool {
+        true
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum InnerResult {
+pub enum AuthInnerLayerResult {
     Send(MessageContent),
     Finished,
     Failed,
     NextLayer,
 }
 
-impl<I: InnerLayer> ThisLayer for AuthLayer<I> {
+impl<I: AuthInnerLayer> ThisLayer for AuthLayer<I> {
     fn is_peer(&self) -> bool {
         false
     }
@@ -63,7 +71,9 @@ impl<I: InnerLayer> ThisLayer for AuthLayer<I> {
             self.peer_has_sent_nak = true;
 
             for candidate in self.candidates.iter() {
-                if msg.data[1..].contains(&candidate.method_identifier()) {
+                if candidate.selectable_by_nak()
+                    && msg.data[1..].contains(&candidate.method_identifier())
+                {
                     self.next_layer = candidate.clone();
 
                     let res = self.next_layer.start(env);
@@ -90,7 +100,7 @@ impl<I: InnerLayer> ThisLayer for AuthLayer<I> {
     }
 }
 
-impl<I: InnerLayer> AuthLayer<I> {
+impl<I: AuthInnerLayer> AuthLayer<I> {
     pub fn new(candidates: Vec<I>) -> Self {
         assert!(!candidates.is_empty());
         AuthLayer {
@@ -102,18 +112,18 @@ impl<I: InnerLayer> AuthLayer<I> {
 
     fn process_result(
         &mut self,
-        res: InnerResult,
+        res: AuthInnerLayerResult,
         env: &mut dyn EapEnvironment,
     ) -> ThisLayerResult {
         match res {
-            InnerResult::Send(msg) => {
+            AuthInnerLayerResult::Send(msg) => {
                 let id = self.next_layer.method_identifier();
                 let data = add_message_identifier_to_data(id, msg.data);
                 ThisLayerResult::Send(MessageContent { data })
             }
-            InnerResult::Finished => ThisLayerResult::Finished,
-            InnerResult::Failed => ThisLayerResult::Failed,
-            InnerResult::NextLayer => {
+            AuthInnerLayerResult::Finished => ThisLayerResult::Finished,
+            AuthInnerLayerResult::Failed => ThisLayerResult::Failed,
+            AuthInnerLayerResult::NextLayer => {
                 if self.candidates.len() > 1 {
                     // TODO: select properly
                     self.next_layer = self.candidates[1].clone();
@@ -144,11 +154,11 @@ mod tests {
     #[derive(Debug, Clone, PartialEq, Eq)]
     struct DummyProtocol {
         method_identifier: u8,
-        events: Vec<InnerResult>,
+        events: Vec<AuthInnerLayerResult>,
     }
 
     impl DummyProtocol {
-        fn new(method_identifier: u8, events: &[InnerResult]) -> Self {
+        fn new(method_identifier: u8, events: &[AuthInnerLayerResult]) -> Self {
             DummyProtocol {
                 method_identifier,
                 events: events.to_vec(),
@@ -156,12 +166,12 @@ mod tests {
         }
     }
 
-    impl InnerLayer for DummyProtocol {
+    impl AuthInnerLayer for DummyProtocol {
         fn method_identifier(&self) -> u8 {
             self.method_identifier
         }
 
-        fn start(&mut self, _env: &mut dyn EapEnvironment) -> InnerResult {
+        fn start(&mut self, _env: &mut dyn EapEnvironment) -> AuthInnerLayerResult {
             self.events.remove(0)
         }
 
@@ -170,7 +180,7 @@ mod tests {
             _msg: &[u8],
             _meta: &RecvMeta,
             _env: &mut dyn EapEnvironment,
-        ) -> InnerResult {
+        ) -> AuthInnerLayerResult {
             self.events.remove(0)
         }
     }
@@ -189,33 +199,33 @@ mod tests {
             DummyProtocol::new(
                 1,
                 &[
-                    InnerResult::Send(MessageContent {
+                    AuthInnerLayerResult::Send(MessageContent {
                         data: b"username?".to_vec(),
                     }),
-                    InnerResult::NextLayer,
+                    AuthInnerLayerResult::NextLayer,
                 ],
             ),
             DummyProtocol::new(
                 2,
                 &[
-                    InnerResult::Send(MessageContent {
+                    AuthInnerLayerResult::Send(MessageContent {
                         data: b"unsupported".to_vec(),
                     }),
-                    InnerResult::Failed,
+                    AuthInnerLayerResult::Failed,
                 ],
             ),
             DummyProtocol::new(
                 4,
                 &[
-                    InnerResult::Send(MessageContent {
+                    AuthInnerLayerResult::Send(MessageContent {
                         data: b"right".to_vec(),
                     }),
-                    InnerResult::Finished,
+                    AuthInnerLayerResult::Finished,
                 ],
             ),
             DummyProtocol::new(
                 5,
-                &[InnerResult::Send(MessageContent {
+                &[AuthInnerLayerResult::Send(MessageContent {
                     data: b"don't select me".to_vec(),
                 })],
             ),
