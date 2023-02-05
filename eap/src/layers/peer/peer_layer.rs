@@ -207,7 +207,6 @@ mod tests {
         assert_eq!(layer.start(&mut env), ThisLayerResult::Noop);
 
         // Send a Request
-
         assert_eq!(
             layer.recv(&Message::new(MessageCode::Request, 0, b"\x01"), &mut env),
             ThisLayerResult::Send(MessageContent {
@@ -238,7 +237,7 @@ mod tests {
         assert_eq!(
             layer.recv(&Message::new(MessageCode::Request, 0, b"\x04"), &mut env),
             ThisLayerResult::Send(MessageContent {
-                data: b"Ok".to_vec(),
+                data: b"\x04Ok".to_vec(),
             })
         );
     }
