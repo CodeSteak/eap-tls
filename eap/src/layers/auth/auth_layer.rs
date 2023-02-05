@@ -9,21 +9,9 @@ use crate::layers::eap_layer::{InnerLayer as ThisLayer, InnerLayerOutput as This
 
 #[derive(Clone)]
 pub struct AuthLayer<I: InnerLayer> {
-    state: State,
     peer_has_sent_nak: bool, // RFC allows only one NAK per session
     next_layer: I,
     candidates: Vec<I>, // <- should be okay for now
-}
-
-pub enum AuthResult {
-    Ok,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-enum State {
-    Default,
-    Finished,
-    Failed,
 }
 
 pub const METHOD_CLIENT_PROPOSAL: u8 = 3;
@@ -33,7 +21,6 @@ pub struct RecvMeta<'a> {
 }
 
 pub trait InnerLayer: Clone {
-    /* */
     fn method_identifier(&self) -> u8;
     fn start(&mut self, env: &mut dyn EapEnvironment) -> InnerResult;
     fn recv(&mut self, msg: &[u8], meta: &RecvMeta, env: &mut dyn EapEnvironment) -> InnerResult;
@@ -41,7 +28,6 @@ pub trait InnerLayer: Clone {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InnerResult {
-    Noop,
     Send(MessageContent),
     Finished,
     Failed,
@@ -94,7 +80,7 @@ impl<I: InnerLayer> ThisLayer for AuthLayer<I> {
 
         let res = self
             .next_layer
-            .recv(&msg.data[1..], &RecvMeta { message: &msg }, env);
+            .recv(&msg.data[1..], &RecvMeta { message: msg }, env);
 
         self.process_result(res, env)
     }
@@ -108,7 +94,6 @@ impl<I: InnerLayer> AuthLayer<I> {
     pub fn new(candidates: Vec<I>) -> Self {
         assert!(!candidates.is_empty());
         AuthLayer {
-            state: State::Default {},
             next_layer: candidates[0].clone(),
             candidates,
             peer_has_sent_nak: false,
@@ -121,7 +106,6 @@ impl<I: InnerLayer> AuthLayer<I> {
         env: &mut dyn EapEnvironment,
     ) -> ThisLayerResult {
         match res {
-            InnerResult::Noop => ThisLayerResult::Noop,
             InnerResult::Send(msg) => {
                 let id = self.next_layer.method_identifier();
                 let data = add_message_identifier_to_data(id, msg.data);

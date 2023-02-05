@@ -1,6 +1,5 @@
 use layers::{
     auth::{AnyMethod, AuthIdentityMethod, AuthMD5ChallengeMethod},
-    eap_layer::EapOutput,
     AuthLayer, EapLayer,
 };
 

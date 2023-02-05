@@ -41,14 +41,16 @@ impl auth_layer::InnerLayer for AnyMethod {
     }
 }
 
-impl Into<AnyMethod> for identity::AuthIdentityMethod {
-    fn into(self) -> AnyMethod {
-        AnyMethod::Identity(self)
+#[allow(unused)]
+impl From<identity::AuthIdentityMethod> for AnyMethod {
+    fn from(val: identity::AuthIdentityMethod) -> Self {
+        AnyMethod::Identity(val)
     }
 }
 
-impl Into<AnyMethod> for md5_challange::AuthMD5ChallengeMethod {
-    fn into(self) -> AnyMethod {
-        AnyMethod::MD5Challange(self)
+#[allow(unused)]
+impl From<md5_challange::AuthMD5ChallengeMethod> for AnyMethod {
+    fn from(val: md5_challange::AuthMD5ChallengeMethod) -> Self {
+        AnyMethod::MD5Challange(val)
     }
 }

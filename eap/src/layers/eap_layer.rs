@@ -45,6 +45,7 @@ pub trait InnerLayer {
     fn recv(&mut self, _msg: &Message, _env: &mut dyn EapEnvironment) -> InnerLayerOutput;
 }
 
+#[allow(unused)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InnerLayerInput {
     Start,
@@ -73,17 +74,15 @@ pub enum EapStatus {
     Failed(StateError), // Conversation has ended with an error
 }
 
+#[allow(unused)]
 impl EapStatus {
     fn failed(self) -> bool {
-        match self {
-            EapStatus::Failed(_) => true,
-            _ => false,
-        }
+        matches!(self, EapStatus::Failed(_))
     }
 }
 
 impl EapOutput {
-    fn send(message: Message, with_timeout: bool) -> Self {
+    fn send(message: Message) -> Self {
         EapOutput {
             status: EapStatus::Ok,
             message: Some(message),
@@ -119,6 +118,7 @@ impl EapOutput {
     }
 }
 
+#[allow(unused)]
 pub enum EapInput<'a> {
     Start,
     Receive(&'a [u8]),
@@ -127,12 +127,7 @@ pub enum EapInput<'a> {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
 pub enum StateError {
-    UnexpectedMessage,
     InvalidMessage,
-    ProtocolError,
-    // This event is invalid in the current state
-    InvalidEvent,
-    /// The conversation has ended
     EndOfConversation,
     Timeout,
 }
@@ -148,6 +143,7 @@ impl<N: InnerLayer> EapLayer<N> {
         }
     }
 
+    #[allow(unused)]
     /// Note: If there is no event to process after a certain amount of time, send a timeout event
     /// to the state machine. This Timeout should be a few milliseconds. Too many Timeout will
     /// cause the state machine to fail. This value can be adjusted in the environment.
@@ -298,11 +294,7 @@ impl<N: InnerLayer> EapLayer<N> {
 
                 *retransmission_count += 1;
 
-                EapOutput::send(
-                    last_message.clone(),
-                    // Set timeout for retransmission
-                    self.next_layer.is_auth(),
-                )
+                EapOutput::send(last_message.clone())
             }
             _ => self.on_invalid_message(env),
         }
@@ -345,7 +337,7 @@ impl<N: InnerLayer> EapLayer<N> {
         }
     }
 
-    fn send_message(&mut self, msg: MessageContent, env: &mut dyn EapEnvironment) -> EapOutput {
+    fn send_message(&mut self, msg: MessageContent, _env: &mut dyn EapEnvironment) -> EapOutput {
         let code = if self.next_layer.is_auth() {
             MessageCode::Request
         } else {
@@ -362,7 +354,7 @@ impl<N: InnerLayer> EapLayer<N> {
             last_message: message.clone(),
         };
 
-        EapOutput::send(message, self.next_layer.is_auth())
+        EapOutput::send(message)
     }
 }
 
@@ -370,7 +362,6 @@ impl<N: InnerLayer> EapLayer<N> {
 #[cfg(test)]
 mod tests {
     use crate::DefaultEnvironment;
-    use std::panic::Location;
 
     pub use super::*;
 
@@ -378,7 +369,6 @@ mod tests {
         is_auth: bool,
         is_peer: bool,
         counter: u8,
-        messages: Vec<MessageContent>,
     }
 
     impl DummyInnerLayer {
@@ -387,22 +377,12 @@ mod tests {
                 is_auth,
                 is_peer: !is_auth,
                 counter: 0,
-                messages: Vec::new(),
-            }
-        }
-
-        pub fn with_messages(is_auth: bool, messages: &[MessageContent]) -> Self {
-            Self {
-                is_auth,
-                is_peer: !is_auth,
-                counter: 0,
-                messages: messages.to_vec(),
             }
         }
     }
 
     impl InnerLayer for DummyInnerLayer {
-        fn start(&mut self, env: &mut dyn EapEnvironment) -> InnerLayerOutput {
+        fn start(&mut self, _env: &mut dyn EapEnvironment) -> InnerLayerOutput {
             if self.is_auth {
                 InnerLayerOutput::Send(MessageContent::new(&[0, self.counter]))
             } else {
@@ -410,7 +390,7 @@ mod tests {
             }
         }
 
-        fn recv(&mut self, msg: &Message, env: &mut dyn EapEnvironment) -> InnerLayerOutput {
+        fn recv(&mut self, msg: &Message, _env: &mut dyn EapEnvironment) -> InnerLayerOutput {
             if self.is_auth {
                 assert_eq!(msg.code, MessageCode::Response);
             } else {
@@ -508,7 +488,7 @@ mod tests {
         let peer_msg = &b"Not a valid EAP message"[..];
         for _ in 1..env.max_invalid_message_count() {
             assert_output(
-                layer.receive(&peer_msg, &mut env),
+                layer.receive(peer_msg, &mut env),
                 EapOutput {
                     message: None,
                     status: EapStatus::Ok,
@@ -516,7 +496,7 @@ mod tests {
             );
         }
 
-        let output = layer.receive(&peer_msg, &mut env);
+        let output = layer.receive(peer_msg, &mut env);
         assert!(output.status.failed());
     }
 
@@ -537,7 +517,7 @@ mod tests {
 
         let peer_msg = Message::new(MessageCode::Request, 0, &[0, 0]).to_bytes();
 
-        for i in 0..env.max_retransmit_count() + 1 {
+        for _ in 0..env.max_retransmit_count() + 1 {
             // +1 because the first message is not a retransmission
             assert_output(
                 layer.receive(&peer_msg, &mut env),
