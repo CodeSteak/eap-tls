@@ -11,3 +11,4 @@
 .vscode
 /pppd/src/bindings*
 /wifieap/src/bindings*
+/coverage
