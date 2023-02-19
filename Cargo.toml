@@ -2,7 +2,7 @@
 
 members = [
     "wifieap",
-    "eapdemo",
+    "demo",
     "eap",
     "stater",
 ]
