@@ -1,9 +1,5 @@
-use lazy_static::__Deref;
-use std::{
-    collections::HashMap,
-    ffi::{c_void, CStr, CString},
-    sync::Once,
-};
+use std::{collections::HashMap, ffi::c_void, sync::Once};
+use tempfile::NamedTempFile;
 
 pub use crate::bindings_peer::*;
 use crate::{EapStatus, TlsConfig};
@@ -27,7 +23,7 @@ pub struct EapPeer {
 
     state_bool: HashMap<eapol_bool_var, bool>,
     state_int: HashMap<eapol_int_var, u32>,
-    blobs: Vec<WpaBlobEntry>,
+    _temp_files: Vec<NamedTempFile>,
 }
 
 pub struct EapPeerBuilder {
@@ -68,6 +64,8 @@ impl EapPeer {
     fn new(builder: &EapPeerBuilder) -> Box<Self> {
         PEER_INIT.call_once(|| {
             unsafe {
+                wpa_debug_level = 0;
+
                 //assert!(eap_peer_mschapv2_register() == 0);
                 assert!(eap_peer_md5_register() == 0);
                 assert!(eap_peer_tls_register() == 0);
@@ -111,18 +109,14 @@ impl EapPeer {
         }
 
         // TLS / Ca
-        let blobs = if let Some(tls) = &builder.tls_config {
-            unsafe {
-                peer_config.ca_cert = crate::util::malloc_str("blob://ca").0 as *mut i8;
-                peer_config.client_cert = crate::util::malloc_str("blob://client").0 as *mut i8;
-                peer_config.private_key = crate::util::malloc_str("blob://private").0 as *mut i8;
-            }
+        let temp_files = if let Some(tls) = &builder.tls_config {
+            let mut registry = vec![];
 
-            vec![
-                WpaBlobEntry::new("ca", &tls.ca_cert),
-                WpaBlobEntry::new("client", &tls.server_cert),
-                WpaBlobEntry::new("private", &tls.server_key),
-            ]
+            peer_config.ca_cert = crate::util::create_tempfile(&tls.ca_cert, &mut registry);
+            peer_config.client_cert = crate::util::create_tempfile(&tls.server_cert, &mut registry);
+            peer_config.private_key = crate::util::create_tempfile(&tls.server_key, &mut registry);
+
+            registry
         } else {
             vec![]
         };
@@ -138,7 +132,7 @@ impl EapPeer {
             wpabuf,
             state_bool: HashMap::new(),
             state_int: HashMap::new(),
-            blobs,
+            _temp_files: temp_files,
         });
 
         me.state = unsafe {
@@ -260,19 +254,9 @@ impl EapPeer {
     }
 
     unsafe extern "C" fn get_config_blob(
-        ctx: *mut c_void,
-        name: *const i8,
+        _ctx: *mut c_void,
+        _name: *const i8,
     ) -> *const wpa_config_blob {
-        let key = CStr::from_ptr(name).to_str().unwrap();
-        dbg!(&key);
-        let eap = &mut *(ctx as *mut Self);
-
-        for blob in &eap.blobs {
-            if blob.name == key {
-                return blob.blob.deref() as *const wpa_config_blob;
-            }
-        }
-
         std::ptr::null()
     }
 
@@ -288,33 +272,5 @@ impl Drop for EapPeer {
             eap_peer_sm_deinit(self.state);
             wpabuf_free(self.wpabuf);
         };
-    }
-}
-
-struct WpaBlobEntry {
-    name: String,
-    _data: Box<[u8]>,
-    _cstr: CString,
-    blob: Box<wpa_config_blob>,
-}
-
-impl WpaBlobEntry {
-    pub fn new(name: &str, data: &[u8]) -> Self {
-        let name = name.to_string();
-        let cstr = CString::new(name.as_str()).unwrap();
-        let data = data.to_vec().into_boxed_slice();
-        let blob = Box::new(wpa_config_blob {
-            name: cstr.as_ptr() as *mut i8,
-            data: data.as_ptr() as *const u8 as *mut u8,
-            len: data.len(),
-            next: std::ptr::null_mut(),
-        });
-
-        Self {
-            name,
-            _data: data,
-            _cstr: cstr,
-            blob,
-        }
     }
 }

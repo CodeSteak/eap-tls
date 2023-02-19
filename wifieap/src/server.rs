@@ -76,6 +76,7 @@ struct EapServerTlsState {
     _tls_params: Box<tls_connection_params>,
     _tls_config: Box<tls_config>,
     _cfg: TlsConfig,
+    _temp_files: Vec<tempfile::NamedTempFile>,
 }
 
 impl Drop for EapServerTlsState {
@@ -93,6 +94,8 @@ impl EapServer {
 
     fn init(builder: EapServerBuilder) -> Box<Self> {
         SERVER_INIT.call_once(|| unsafe {
+            wpa_debug_level = 0;
+
             assert!(eap_server_identity_register() == 0);
             assert!(eap_server_md5_register() == 0);
             assert!(eap_server_tls_register() == 0);
@@ -122,23 +125,16 @@ impl EapServer {
             unsafe {
                 tls_ctx = tls_init(&*tls_config);
                 assert!(!tls_ctx.is_null());
+            }
 
-                let ca_cert = &tls.ca_cert[..];
-                tls_params.ca_cert_blob = ca_cert.as_ptr();
-                tls_params.ca_cert_blob_len = ca_cert.len();
+            let mut temp_files = vec![];
 
-                let client_cert = &tls.server_cert[..];
-                tls_params.client_cert_blob = client_cert.as_ptr();
-                tls_params.client_cert_blob_len = client_cert.len();
+            tls_params.ca_cert = crate::util::create_tempfile(&tls.ca_cert, &mut temp_files);
+            tls_params.client_cert =
+                crate::util::create_tempfile(&tls.server_cert, &mut temp_files);
+            tls_params.private_key = crate::util::create_tempfile(&tls.server_key, &mut temp_files);
 
-                let private_key = &tls.server_key[..];
-                tls_params.private_key_blob = private_key.as_ptr();
-                tls_params.private_key_blob_len = private_key.len();
-
-                let dh = &tls.dh_params[..];
-                tls_params.dh_blob = dh.as_ptr();
-                tls_params.dh_blob_len = dh.len();
-
+            unsafe {
                 assert_eq!(tls_global_set_params(tls_ctx, &*tls_params), 0);
                 assert_eq!(tls_global_set_verify(tls_ctx, 0, 1), 0);
             }
@@ -150,6 +146,7 @@ impl EapServer {
                 _tls_params: tls_params,
                 _tls_config: tls_config,
                 _cfg: tls,
+                _temp_files: temp_files,
             })
         } else {
             None

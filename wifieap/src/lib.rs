@@ -65,18 +65,18 @@ impl TlsConfig {
 
     pub fn dummy_server() -> Self {
         Self {
-            ca_cert: include_bytes!("dummy/ca.der").to_vec(),
-            server_cert: include_bytes!("dummy/server-cert.der").to_vec(),
-            server_key: include_bytes!("dummy/server-key.der").to_vec(),
+            ca_cert: include_bytes!("dummy/ca.crt").to_vec(),
+            server_cert: include_bytes!("dummy/server-cert.crt").to_vec(),
+            server_key: include_bytes!("dummy/server-key.pem").to_vec(),
             dh_params: Self::default_dh_params(),
         }
     }
 
     pub fn dummy_client() -> Self {
         Self {
-            ca_cert: include_bytes!("dummy/ca.der").to_vec(),
-            server_cert: include_bytes!("dummy/client-cert.der").to_vec(),
-            server_key: include_bytes!("dummy/client-key.der").to_vec(),
+            ca_cert: include_bytes!("dummy/ca.crt").to_vec(),
+            server_cert: include_bytes!("dummy/client-cert.crt").to_vec(),
+            server_key: include_bytes!("dummy/client-key.pem").to_vec(),
             dh_params: Self::default_dh_params(),
         }
     }

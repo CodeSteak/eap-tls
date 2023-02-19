@@ -1,4 +1,6 @@
-use std::ffi::c_void;
+use std::{ffi::c_void, io::Write};
+
+use tempfile::NamedTempFile;
 
 use crate::peer::{malloc, memccpy};
 
@@ -14,4 +16,14 @@ pub unsafe fn malloc_str(s: &str) -> (*mut u8, usize) {
     *(ptr.add(s.len()) as *mut u8) = 0;
 
     (ptr as *mut u8, s.len())
+}
+
+pub fn create_tempfile(contents: &[u8], registry: &mut Vec<NamedTempFile>) -> *mut i8 {
+    let mut file = NamedTempFile::new().unwrap();
+    file.write_all(contents).unwrap();
+
+    let path = file.path().to_str().unwrap();
+    let (ptr, _) = unsafe { malloc_str(path) };
+    registry.push(file);
+    ptr as _
 }
