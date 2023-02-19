@@ -1,7 +1,7 @@
 use crate::{
     layers::{
         self,
-        auth::{AnyMethod, AuthIdentityMethod, AuthMD5ChallengeMethod},
+        auth::{AnyMethod, AuthIdentityMethod, AuthMD5ChallengeMethod, AuthTlsMethod},
         AuthLayer, EapLayer,
     },
     DefaultEnvironment,
@@ -31,6 +31,17 @@ impl Authenticator {
             inner: EapLayer::new(AuthLayer::new(vec![
                 AuthIdentityMethod::new().into(),
                 AuthMD5ChallengeMethod::new(password.as_bytes()).into(),
+            ])),
+            env: DefaultEnvironment::new(),
+            buffer: Vec::new(),
+        }
+    }
+
+    pub fn new_tls() -> Self {
+        Self {
+            inner: EapLayer::new(AuthLayer::new(vec![
+                AuthIdentityMethod::new().into(),
+                AuthTlsMethod::new().into(),
             ])),
             env: DefaultEnvironment::new(),
             buffer: Vec::new(),
