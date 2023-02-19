@@ -50,6 +50,8 @@ fn main() {
 }
 
 fn build_hostap() {
+    patch_dh_openssl_issue();
+
     Command::new("make")
         .arg("CONFIG_TLSV12=y")
         .current_dir(SOURCE_DIR)
@@ -72,6 +74,22 @@ fn build_hostap() {
     lib_from_objects("methods_peer", PEER_OBJECTS);
     lib_from_objects("methods_server", SERVER_OBJECTS);
     lib_from_objects("openssl_wrapper", OPENSSL_OBJECTS);
+}
+
+fn patch_dh_openssl_issue() {
+    // DH Params are just sillenty ignored if the
+    // openssl backend is used. No error, no warning.
+    // This patchs adds support for default dh params
+    // if none are provided. (or dh_blob is used)
+
+    let s = Command::new("git")
+        .arg("apply")
+        .arg("../../dh_openssl.patch")
+        .current_dir(SOURCE_DIR)
+        .status()
+        .unwrap();
+
+    eprintln!("Patching dh_openssl: {s:?}");
 }
 
 fn patch_makefile(sublib: &str) {

@@ -1,0 +1,32 @@
+diff --git a/src/crypto/tls_openssl.c b/src/crypto/tls_openssl.c
+index 07d38e47b..b87b6d06c 100644
+--- a/src/crypto/tls_openssl.c
++++ b/src/crypto/tls_openssl.c
+@@ -3818,8 +3818,12 @@ static int tls_connection_dh(struct tls_connection *conn, const char *dh_file)
+ 	BIO *bio;
+ 
+ 	/* TODO: add support for dh_blob */
+-	if (dh_file == NULL)
++	if (!dh_file) {
++        wpa_printf(MSG_INFO, "TLS: No DH file provided, using default params");
++		SSL_CTX_set_dh_auto(conn->ssl_ctx, 1);
+ 		return 0;
++	}
++	
+ 	if (conn == NULL)
+ 		return -1;
+ 
+@@ -3893,8 +3897,12 @@ static int tls_global_dh(struct tls_data *data, const char *dh_file)
+ 	BIO *bio;
+ 
+ 	/* TODO: add support for dh_blob */
+-	if (dh_file == NULL)
++	if (!dh_file) {
++        wpa_printf(MSG_INFO, "TLS: No DH file provided, using default params [GLOBAL]");
++		SSL_CTX_set_dh_auto(ssl_ctx, 1);
+ 		return 0;
++	}
++	
+ 	if (ssl_ctx == NULL)
+ 		return -1;
+ 
