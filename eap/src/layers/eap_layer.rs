@@ -229,6 +229,16 @@ impl<N: InnerLayer> EapLayer<N> {
                     self.process_result(res, env)
                 }
                 Ok(msg) if self.next_layer.is_peer() => {
+                    // Sucess messages have other next_id ...
+                    // because this code would be to easy otherwise
+                    if msg.code == MessageCode::Success
+                        && self.next_layer.can_succeed()
+                        && msg.identifier == self.next_id.wrapping_sub(1)
+                    {
+                        self.state = State::Finished;
+                        return EapOutput::success(None);
+                    }
+
                     if msg.identifier == *expected_id {
                         // a.k.a expected_id is the last id sent by the peer
                         // Auth layer expects a retranmission of the last request
@@ -248,11 +258,6 @@ impl<N: InnerLayer> EapLayer<N> {
                     if msg.code == MessageCode::Failure {
                         self.state = State::Failed;
                         return EapOutput::failed(StateError::EndOfConversation, None);
-                    }
-
-                    if msg.code == MessageCode::Success && self.next_layer.can_succeed() {
-                        self.state = State::Finished;
-                        return EapOutput::success(None);
                     }
 
                     let res = self.next_layer.recv(&msg, env);
@@ -340,6 +345,9 @@ impl<N: InnerLayer> EapLayer<N> {
                 self.state = State::Finished;
                 if self.next_layer.is_auth() {
                     // Notify Client
+                    // For success messages the identifier is the same as the last request.
+                    // TODO: refactor `next_id to be `last_id`
+                    self.next_id = self.next_id.wrapping_sub(1);
                     EapOutput::success(Some(Message::new(MessageCode::Success, self.next_id, &[])))
                 } else {
                     EapOutput::success(None)
@@ -482,7 +490,7 @@ mod tests {
         // Now send the correct message
         assert_output(
             layer.receive(
-                &Message::new(MessageCode::Success, 43, &[]).to_bytes(),
+                &Message::new(MessageCode::Success, 42, &[]).to_bytes(),
                 &mut env,
             ),
             EapOutput {
