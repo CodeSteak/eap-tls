@@ -1,7 +1,7 @@
 use crate::{
     layers::{
         self,
-        auth::{AnyMethod, AuthIdentityMethod, AuthMD5ChallengeMethod, AuthTlsMethod},
+        auth::{AnyMethod, AuthIdentityMethod, AuthMD5ChallengeMethod},
         AuthLayer, EapLayer,
     },
     DefaultEnvironment,
@@ -37,7 +37,9 @@ impl Authenticator {
         }
     }
 
+    #[cfg(feature = "tls")]
     pub fn new_tls() -> Self {
+        use crate::layers::auth::AuthTlsMethod;
         Self {
             inner: EapLayer::new(AuthLayer::new(vec![
                 AuthIdentityMethod::new().into(),

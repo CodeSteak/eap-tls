@@ -12,3 +12,5 @@
 /pppd/src/bindings*
 /wifieap/src/bindings*
 /coverage
+/.embuild
+/rustls
