@@ -1,6 +1,8 @@
 use std::{sync::Arc, vec};
 
-use rustls::{Certificate, PrivateKey, ServerConfig, ServerConnection};
+use rustls::{
+    server::AllowAnyAuthenticatedClient, Certificate, PrivateKey, ServerConfig, ServerConnection,
+};
 
 use crate::{message::MessageContent, EapEnvironment};
 
@@ -53,12 +55,29 @@ impl AuthTlsMethod {
             })
             .unwrap();
 
+        let ca_cert = rustls_pemfile::read_all(&mut server_config.ca_cert.as_ref())
+            .unwrap()
+            .into_iter()
+            .flat_map(|cert| match cert {
+                rustls_pemfile::Item::X509Certificate(cert) => Some(Certificate(cert)),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+
+        let mut root_ca_store = rustls::RootCertStore::empty();
+
+        assert!(!ca_cert.is_empty());
+        for cert in ca_cert {
+            root_ca_store.add(&cert).unwrap();
+        }
+        assert!(!root_ca_store.is_empty());
+
         let config = ServerConfig::builder()
             .with_safe_default_cipher_suites()
             .with_safe_default_kx_groups()
             .with_safe_default_protocol_versions()
             .unwrap()
-            .with_no_client_auth() // <- remove this line
+            .with_client_cert_verifier(AllowAnyAuthenticatedClient::new(root_ca_store))
             .with_single_cert(server_cert, server_key)
             .expect("bad certificate/key");
 
@@ -128,6 +147,7 @@ impl ThisLayer for AuthTlsMethod {
 
             match self.con.process_new_packets() {
                 Ok(d) => {
+                    dbg!(&d);
                     self.sendbufferstate = SendBufferState::NewPayload {
                         total_length: d.tls_bytes_to_write(),
                     }
@@ -139,7 +159,12 @@ impl ThisLayer for AuthTlsMethod {
             };
         }
 
-        if !self.con.is_handshaking() {
+        if !self.con.is_handshaking()
+            && (matches!(
+                self.sendbufferstate,
+                SendBufferState::NewPayload { total_length: 0 }
+            ) || matches!(self.sendbufferstate, SendBufferState::MidPayload))
+        {
             return ThisLayerResult::Finished;
         }
 
@@ -185,7 +210,7 @@ impl ThisLayer for AuthTlsMethod {
         } else {
             ThisLayerResult::Send(MessageContent {
                 data: vec![Header {
-                    length_included: true,
+                    length_included: false,
                     more_fragments: false,
                     start: false,
                 }

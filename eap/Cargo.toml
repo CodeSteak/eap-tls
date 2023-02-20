@@ -10,5 +10,5 @@ dummycert = {path = "../dummycert"}
 binrw = "0.10.0"
 md5 = "0.7.0"
 rand = "0.8.5"
-rustls = "0.20"
+rustls = "0.20.8"
 rustls-pemfile = "1.0.2"
