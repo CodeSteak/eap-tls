@@ -1,5 +1,3 @@
-use rand::RngCore;
-
 use crate::layers::auth::auth_layer::{AuthInnerLayer, AuthInnerLayerResult};
 use crate::message::MessageContent;
 use crate::EapEnvironment;
@@ -36,7 +34,7 @@ impl AuthInnerLayer for AuthMD5ChallengeMethod {
     }
 
     fn start(&mut self, _env: &mut dyn EapEnvironment) -> AuthInnerLayerResult {
-        rand::thread_rng().fill_bytes(&mut self.challange_data);
+        getrandom::getrandom(&mut self.challange_data).unwrap();
 
         let mut data = vec![self.challange_data.len() as u8]; // Fixed length field
         data.extend_from_slice(&self.challange_data);

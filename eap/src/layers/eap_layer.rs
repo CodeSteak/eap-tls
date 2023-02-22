@@ -134,8 +134,10 @@ pub enum StateError {
 
 impl<N: InnerLayer> EapLayer<N> {
     pub fn new(inner: N) -> Self {
+        let mut next_id = [0];
+        getrandom::getrandom(&mut next_id).unwrap();
         EapLayer {
-            next_id: rand::random(),
+            next_id: next_id[0],
             state: State::Start,
             next_layer: inner,
             invalid_message_count: 0,
