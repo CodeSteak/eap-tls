@@ -1,5 +1,7 @@
 mod wrapper;
 pub use wrapper::*;
+#[cfg(feature = "tls")]
+mod eap_tls;
 mod layers;
 mod message;
 pub mod util;
