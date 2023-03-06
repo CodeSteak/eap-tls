@@ -37,6 +37,20 @@ impl Peer {
         }
     }
 
+    #[cfg(feature = "tls")]
+    pub fn new_tls(identity: &str) -> Self {
+        Self {
+            inner: EapLayer::new(PeerLayer::new(vec![
+                AnyMethod::Identity(crate::layers::peer::PeerIdentityMethod::new(
+                    identity.as_bytes(),
+                )),
+                AnyMethod::Tls(crate::layers::peer::PeerTlsMethod::new()),
+            ])),
+            env: DefaultEnvironment::new(),
+            buffer: Vec::new(),
+        }
+    }
+
     pub fn receive(&mut self, data: &[u8]) {
         self.buffer = data.to_vec();
     }

@@ -43,6 +43,10 @@ pub trait PeerInnerLayer: Clone {
     fn selectable_by_nak(&self) -> bool {
         true
     }
+
+    fn can_succeed(&self) -> Option<bool> {
+        None
+    }
 }
 
 pub const METHOD_CLIENT_PROPOSAL: u8 = 3;
@@ -60,8 +64,10 @@ impl<I: PeerInnerLayer> ThisLayer for PeerLayer<I> {
     }
 
     fn can_succeed(&self) -> bool {
-        // TODO: FIX ME
-        true
+        self.next_layer
+            .as_ref()
+            .and_then(|layer| layer.can_succeed())
+            .unwrap_or(true)
     }
 
     fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
@@ -85,9 +91,9 @@ impl<I: PeerInnerLayer> ThisLayer for PeerLayer<I> {
             // Find a candidate
             for c in self.candidates.iter_mut() {
                 if c.method_identifier() == method_identifier {
-                    self.next_layer = Some(c.clone());
-
+                    let mut c = c.clone();
                     let res = c.recv(&msg.data[1..], &RecvMeta { message: msg }, env);
+                    self.next_layer = Some(c);
                     return self.process_result(res, env);
                 }
             }

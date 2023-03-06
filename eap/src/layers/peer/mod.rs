@@ -7,12 +7,20 @@ pub use identity::PeerIdentityMethod;
 mod md5_challenge;
 pub use md5_challenge::PeerMD5ChallengeMethod;
 
+#[cfg(feature = "tls")]
+mod tls;
+
+#[cfg(feature = "tls")]
+pub use tls::PeerTlsMethod;
+
 use self::peer_layer::PeerInnerLayer;
 
 #[derive(Clone)]
 pub enum AnyMethod {
     Identity(PeerIdentityMethod),
     MD5Challenge(PeerMD5ChallengeMethod),
+    #[cfg(feature = "tls")]
+    Tls(tls::PeerTlsMethod),
 }
 
 impl From<PeerIdentityMethod> for AnyMethod {
@@ -32,6 +40,8 @@ impl PeerInnerLayer for AnyMethod {
         match self {
             Self::Identity(i) => i.method_identifier(),
             Self::MD5Challenge(i) => i.method_identifier(),
+            #[cfg(feature = "tls")]
+            Self::Tls(i) => i.method_identifier(),
         }
     }
 
@@ -39,6 +49,8 @@ impl PeerInnerLayer for AnyMethod {
         match self {
             Self::Identity(i) => i.start(env),
             Self::MD5Challenge(i) => i.start(env),
+            #[cfg(feature = "tls")]
+            Self::Tls(i) => i.start(env),
         }
     }
 
@@ -51,6 +63,8 @@ impl PeerInnerLayer for AnyMethod {
         match self {
             Self::Identity(i) => i.recv(msg, meta, env),
             Self::MD5Challenge(i) => i.recv(msg, meta, env),
+            #[cfg(feature = "tls")]
+            Self::Tls(i) => i.recv(msg, meta, env),
         }
     }
 }

@@ -1,11 +1,12 @@
-use std::ops::{Deref, DerefMut};
+use std::ops::DerefMut;
 
 use rustls::ConnectionCommon;
 const TLS_LEN_FIELD_LEN: usize = 4;
 
 pub struct CommonTLS<C> {
-    pub con: C,
+    pub con: Box<C>,
     pub sendbufferstate: SendBufferState,
+    pub finished: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -23,8 +24,9 @@ pub enum SendBufferState {
 impl<C> CommonTLS<C> {
     pub fn new(con: C) -> Self {
         Self {
-            con,
+            con: Box::new(con),
             sendbufferstate: SendBufferState::NewPayload { total_length: 0 },
+            finished: false,
         }
     }
 }
@@ -42,7 +44,7 @@ where
         .write()]
     }
 
-    pub fn process(&mut self, msg: &[u8]) -> Result<EapCommonResult, ()> {
+    pub fn process(&mut self, msg: &[u8], return_on_finish: bool) -> Result<EapCommonResult, ()> {
         if msg.is_empty() {
             return Err(());
         }
@@ -51,8 +53,7 @@ where
         let only_ack = header.more_fragments;
 
         let has_data = msg.len() > 1;
-        if has_data {
-            dbg!(header.length_included);
+        if has_data || header.start {
             let mut payload: &[u8] = if header.length_included {
                 if msg.len() < TLS_LEN_FIELD_LEN + 1 {
                     eprintln!("TLS: message too short");
@@ -78,7 +79,6 @@ where
 
             match self.con.process_new_packets() {
                 Ok(d) => {
-                    dbg!(&d);
                     self.sendbufferstate = SendBufferState::NewPayload {
                         total_length: d.tls_bytes_to_write(),
                     }
@@ -96,7 +96,11 @@ where
                 SendBufferState::NewPayload { total_length: 0 }
             ) || matches!(self.sendbufferstate, SendBufferState::MidPayload))
         {
-            return Ok(EapCommonResult::Finished);
+            self.finished = true;
+
+            if return_on_finish {
+                return Ok(EapCommonResult::Finished);
+            }
         }
 
         if !only_ack {
@@ -137,7 +141,7 @@ where
             self.sendbufferstate = SendBufferState::MidPayload;
 
             result[0] = header.write();
-            return Ok(EapCommonResult::Next(result));
+            Ok(EapCommonResult::Next(result))
         } else {
             let result = vec![Header {
                 length_included: false,
@@ -146,7 +150,7 @@ where
             }
             .write()];
 
-            return Ok(EapCommonResult::Next(result));
+            Ok(EapCommonResult::Next(result))
         }
     }
 }

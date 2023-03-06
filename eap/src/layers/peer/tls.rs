@@ -1,32 +1,22 @@
-use crate::eap_tls::{CommonTLS, EapCommonResult};
 use std::sync::Arc;
 
-use rustls::{
-    server::AllowAnyAuthenticatedClient, Certificate, PrivateKey, ServerConfig, ServerConnection,
+use rustls::{Certificate, ClientConfig, ClientConnection, PrivateKey};
+
+use crate::{
+    eap_tls::{CommonTLS, EapCommonResult},
+    message::MessageContent,
+    EapEnvironment,
 };
 
-use crate::{message::MessageContent, EapEnvironment};
+use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};
 
-use super::auth_layer::{
-    AuthInnerLayer as ThisLayer, AuthInnerLayerResult as ThisLayerResult, RecvMeta,
-};
+pub struct PeerTlsMethod {
+    inner: CommonTLS<ClientConnection>,
+}
 
 const METHOD_TLS: u8 = 13;
 
-pub struct AuthTlsMethod {
-    inner: CommonTLS<ServerConnection>,
-}
-
-impl Clone for AuthTlsMethod {
-    fn clone(&self) -> Self {
-        // Remove me after refactor
-        eprintln!("ERROR: AuthTlsMethod is not clonable.");
-
-        AuthTlsMethod::new()
-    }
-}
-
-impl AuthTlsMethod {
+impl PeerTlsMethod {
     pub fn new() -> Self {
         let server_config = dummycert::TlsConfig::dummy_server();
 
@@ -66,46 +56,60 @@ impl AuthTlsMethod {
         }
         assert!(!root_ca_store.is_empty());
 
-        let config = ServerConfig::builder()
+        let mut config = ClientConfig::builder()
             .with_safe_default_cipher_suites()
             .with_safe_default_kx_groups()
             .with_safe_default_protocol_versions()
             .unwrap()
-            .with_client_cert_verifier(AllowAnyAuthenticatedClient::new(root_ca_store))
+            .with_root_certificates(root_ca_store)
             .with_single_cert(server_cert, server_key)
             .expect("bad certificate/key");
 
-        AuthTlsMethod {
-            inner: CommonTLS::new(ServerConnection::new(Arc::new(config)).unwrap()),
+        config.enable_sni = false;
+
+        let server_name = rustls::ServerName::try_from("dummy.example.com").unwrap();
+        PeerTlsMethod {
+            inner: CommonTLS::new(ClientConnection::new(Arc::new(config), server_name).unwrap()),
         }
     }
 }
 
-impl ThisLayer for AuthTlsMethod {
+impl Clone for PeerTlsMethod {
+    fn clone(&self) -> Self {
+        // Remove me after refactor
+        eprintln!("ERROR: PeerTlsMethod is not clonable.");
+
+        PeerTlsMethod::new()
+    }
+}
+
+impl PeerInnerLayer for PeerTlsMethod {
     fn method_identifier(&self) -> u8 {
         METHOD_TLS
     }
 
-    fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
-        ThisLayerResult::Send(MessageContent {
-            data: self.inner.start_packet(),
-        })
+    fn start(&mut self, _env: &mut dyn EapEnvironment) -> PeerInnerLayerResult {
+        PeerInnerLayerResult::Noop
     }
 
     fn recv(
         &mut self,
         msg: &[u8],
         _meta: &RecvMeta,
-        _env: &mut dyn EapEnvironment,
-    ) -> ThisLayerResult {
-        match self.inner.process(msg, true) {
-            Ok(EapCommonResult::Finished) => ThisLayerResult::Finished,
-            Ok(EapCommonResult::Next(data)) => ThisLayerResult::Send(MessageContent { data }),
-            Err(()) => ThisLayerResult::Failed,
+        _env: &mut dyn crate::EapEnvironment,
+    ) -> PeerInnerLayerResult {
+        match self.inner.process(msg, false) {
+            Ok(EapCommonResult::Finished) => {
+                unreachable!();
+            }
+            Ok(EapCommonResult::Next(data)) => {
+                PeerInnerLayerResult::Send(MessageContent::new(&data))
+            }
+            Err(()) => PeerInnerLayerResult::Failed,
         }
     }
 
-    fn selectable_by_nak(&self) -> bool {
-        false
+    fn can_succeed(&self) -> Option<bool> {
+        Some(!self.inner.finished)
     }
 }

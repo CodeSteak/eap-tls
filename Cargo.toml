@@ -8,3 +8,6 @@ members = [
     "dummycert",
     "esptarget",
 ]
+
+#[patch.crates-io]
+#rustls = {path = "../rustls/rustls"}
