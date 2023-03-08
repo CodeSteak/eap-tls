@@ -14,7 +14,7 @@ use super::auth_layer::{
 const METHOD_TLS: u8 = 13;
 
 pub struct AuthTlsMethod {
-    inner: CommonTLS<ServerConnection>,
+    inner: Option<CommonTLS<ServerConnection>>,
 }
 
 impl Clone for AuthTlsMethod {
@@ -28,6 +28,10 @@ impl Clone for AuthTlsMethod {
 
 impl AuthTlsMethod {
     pub fn new() -> Self {
+        Self { inner: None }
+    }
+
+    fn create_common_tls() -> CommonTLS<ServerConnection> {
         let server_config = dummycert::TlsConfig::dummy_server();
 
         let server_cert = rustls_pemfile::read_all(&mut server_config.server_cert.as_ref())
@@ -75,9 +79,7 @@ impl AuthTlsMethod {
             .with_single_cert(server_cert, server_key)
             .expect("bad certificate/key");
 
-        AuthTlsMethod {
-            inner: CommonTLS::new(ServerConnection::new(Arc::new(config)).unwrap()),
-        }
+        CommonTLS::new(ServerConnection::new(Arc::new(config)).unwrap())
     }
 }
 
@@ -87,8 +89,12 @@ impl ThisLayer for AuthTlsMethod {
     }
 
     fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
+        let inner = self
+            .inner
+            .get_or_insert_with(AuthTlsMethod::create_common_tls);
+
         ThisLayerResult::Send(MessageContent {
-            data: self.inner.start_packet(),
+            data: inner.start_packet(),
         })
     }
 
@@ -98,7 +104,11 @@ impl ThisLayer for AuthTlsMethod {
         _meta: &RecvMeta,
         _env: &mut dyn EapEnvironment,
     ) -> ThisLayerResult {
-        match self.inner.process(msg, true) {
+        let inner = self
+            .inner
+            .get_or_insert_with(AuthTlsMethod::create_common_tls);
+
+        match inner.process(msg, true) {
             Ok(EapCommonResult::Finished) => ThisLayerResult::Finished,
             Ok(EapCommonResult::Next(data)) => ThisLayerResult::Send(MessageContent { data }),
             Err(()) => ThisLayerResult::Failed,

@@ -11,13 +11,17 @@ use crate::{
 use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};
 
 pub struct PeerTlsMethod {
-    inner: CommonTLS<ClientConnection>,
+    inner: Option<CommonTLS<ClientConnection>>,
 }
 
 const METHOD_TLS: u8 = 13;
 
 impl PeerTlsMethod {
     pub fn new() -> Self {
+        Self { inner: None }
+    }
+
+    fn create_common_tls() -> CommonTLS<ClientConnection> {
         let server_config = dummycert::TlsConfig::dummy_server();
 
         let server_cert = rustls_pemfile::read_all(&mut server_config.server_cert.as_ref())
@@ -68,9 +72,7 @@ impl PeerTlsMethod {
         config.enable_sni = false;
 
         let server_name = rustls::ServerName::try_from("dummy.example.com").unwrap();
-        PeerTlsMethod {
-            inner: CommonTLS::new(ClientConnection::new(Arc::new(config), server_name).unwrap()),
-        }
+        CommonTLS::new(ClientConnection::new(Arc::new(config), server_name).unwrap())
     }
 }
 
@@ -98,7 +100,11 @@ impl PeerInnerLayer for PeerTlsMethod {
         _meta: &RecvMeta,
         _env: &mut dyn crate::EapEnvironment,
     ) -> PeerInnerLayerResult {
-        match self.inner.process(msg, false) {
+        let inner = self
+            .inner
+            .get_or_insert_with(PeerTlsMethod::create_common_tls);
+
+        match inner.process(msg, false) {
             Ok(EapCommonResult::Finished) => {
                 unreachable!();
             }
@@ -110,6 +116,9 @@ impl PeerInnerLayer for PeerTlsMethod {
     }
 
     fn can_succeed(&self) -> Option<bool> {
-        Some(!self.inner.finished)
+        match &self.inner {
+            Some(inner) => Some(!inner.finished),
+            None => Some(false),
+        }
     }
 }
