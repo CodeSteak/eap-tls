@@ -8,7 +8,8 @@ edition = "2021"
 
 [dependencies]
 esp-idf-sys = { version = "0.31.11", features = ["binstart"] }
-eap = {path = "../eap", default-features=false}
+eap = {path = "../eap", default-features=false, features=["tls"]}
+ring = {path = "../../ring" }
 
 [build-dependencies]
 embuild = "0.30.4"

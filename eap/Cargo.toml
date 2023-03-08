@@ -13,7 +13,8 @@ tls = ["dep:rustls", "dep:rustls-pemfile"]
 dummycert = {path = "../dummycert"}
 binrw = "0.10.0"
 md5 = "0.7.0"
-rustls = {version = "0.20.8", optional = true}
+#rustls = {version = "0.20.8", optional = true}
+rustls = {path = "../../rustls/rustls", optional = true, features=["secret_extraction"]}
 rustls-pemfile = {version = "1.0.2", optional = true}
 getrandom = "0.2.8"
 
