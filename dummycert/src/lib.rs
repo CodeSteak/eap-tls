@@ -22,23 +22,49 @@ impl TlsConfig {
     }
 
     fn default_dh_params() -> Vec<u8> {
-        include_bytes!("certs/dh.pem").to_vec()
+        include_bytes!("rsa/dh.pem").to_vec()
     }
 
     pub fn dummy_server() -> Self {
+        Self::dummy_server_ed25519()
+    }
+
+    pub fn dummy_client() -> Self {
+        Self::dummy_client_ed25519()
+    }
+
+    pub fn dummy_server_ed25519() -> Self {
         Self {
-            ca_cert: include_bytes!("certs/ca.crt").to_vec(),
-            server_cert: include_bytes!("certs/server-cert.crt").to_vec(),
-            server_key: include_bytes!("certs/server-key.pem").to_vec(),
+            ca_cert: include_bytes!("ed25519/ca.crt").to_vec(),
+            server_cert: include_bytes!("ed25519/server-cert.crt").to_vec(),
+            server_key: include_bytes!("ed25519/server-key.pem").to_vec(),
             dh_params: Self::default_dh_params(),
         }
     }
 
-    pub fn dummy_client() -> Self {
+    pub fn dummy_client_ed25519() -> Self {
         Self {
-            ca_cert: include_bytes!("certs/ca.crt").to_vec(),
-            server_cert: include_bytes!("certs/client-cert.crt").to_vec(),
-            server_key: include_bytes!("certs/client-key.pem").to_vec(),
+            ca_cert: include_bytes!("ed25519/ca.crt").to_vec(),
+            server_cert: include_bytes!("ed25519/client-cert.crt").to_vec(),
+            server_key: include_bytes!("ed25519/client-key.pem").to_vec(),
+            dh_params: Self::default_dh_params(),
+        }
+    }
+
+    pub fn dummy_server_rsa() -> Self {
+        Self {
+            ca_cert: include_bytes!("rsa/ca.crt").to_vec(),
+            server_cert: include_bytes!("rsa/server-cert.crt").to_vec(),
+            server_key: include_bytes!("rsa/server-key.pem").to_vec(),
+            dh_params: Self::default_dh_params(),
+        }
+    }
+
+    pub fn dummy_client_rsa() -> Self {
+        Self {
+            ca_cert: include_bytes!("rsa/ca.crt").to_vec(),
+            server_cert: include_bytes!("rsa/client-cert.crt").to_vec(),
+            server_key: include_bytes!("rsa/client-key.pem").to_vec(),
             dh_params: Self::default_dh_params(),
         }
     }
