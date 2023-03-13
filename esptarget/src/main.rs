@@ -1,4 +1,7 @@
-use std::time::{Duration, Instant, SystemTime};
+use std::{
+    ffi::c_void,
+    time::{Duration, Instant, SystemTime},
+};
 
 use eap;
 use esp_idf_sys as _;
@@ -9,9 +12,8 @@ fn main() {
     esp_idf_sys::link_patches();
 
     unsafe {
-        let cpu = esp_pm_get_configuration();
-
-        println!("CPU: {:#?}", cpu);
+        let ticks = esp_idf_sys::ets_get_cpu_frequency();
+        println!("CPU frequency: {} MHz", ticks);
     }
 
     unsafe {
