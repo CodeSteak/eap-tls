@@ -95,7 +95,7 @@ impl<I: AuthInnerLayer> ThisLayer for AuthLayer<I> {
         self.process_result(res, env)
     }
 
-    fn can_succeed(&self) -> bool {
+    fn can_succeed(&mut self) -> bool {
         panic!("Assertion failed, Auth Layer instantiates EAP success")
     }
 }

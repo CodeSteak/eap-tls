@@ -31,7 +31,7 @@ pub trait InnerLayer {
         !self.is_peer()
     }
 
-    fn can_succeed(&self) -> bool;
+    fn can_succeed(&mut self) -> bool;
 
     fn step(&mut self, input: InnerLayerInput, env: &mut dyn EapEnvironment) -> InnerLayerOutput {
         match input {
@@ -430,7 +430,7 @@ mod tests {
             self.is_peer
         }
 
-        fn can_succeed(&self) -> bool {
+        fn can_succeed(&mut self) -> bool {
             true
         }
     }

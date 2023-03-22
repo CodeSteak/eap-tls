@@ -1,4 +1,4 @@
-use crate::EapEnvironment;
+use crate::layers::mux::HasId;
 
 use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};
 
@@ -16,13 +16,24 @@ impl PeerMD5ChallengeMethod {
     }
 }
 
+impl HasId for PeerMD5ChallengeMethod {
+    type Target = dyn PeerInnerLayer;
+    fn id(&self) -> u8 {
+        self.method_identifier()
+    }
+
+    fn get(&self) -> &Self::Target {
+        self
+    }
+
+    fn get_mut(&mut self) -> &mut Self::Target {
+        self
+    }
+}
+
 impl PeerInnerLayer for PeerMD5ChallengeMethod {
     fn method_identifier(&self) -> u8 {
         4
-    }
-
-    fn start(&mut self, _env: &mut dyn EapEnvironment) -> PeerInnerLayerResult {
-        PeerInnerLayerResult::Noop
     }
 
     fn recv(
@@ -63,7 +74,6 @@ mod tests {
         let mut method = PeerMD5ChallengeMethod::new(&password);
 
         assert_eq!(method.method_identifier(), 4);
-        assert_eq!(method.start(&mut env), PeerInnerLayerResult::Noop);
 
         let m = crate::message::Message::new(
             crate::message::MessageCode::Response,

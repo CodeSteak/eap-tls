@@ -8,13 +8,18 @@ pub use peer::*;
 mod tests {
     use rand::{rngs::StdRng, Rng, SeedableRng};
 
+    use crate::layers::{mux::TupleById, peer::peer_layer::PeerInnerLayer};
+
     use super::*;
 
-    fn run(
-        peer: &mut Peer,
+    fn run<I>(
+        peer: &mut Peer<I>,
         auth: &mut Authenticator,
         package_drop_rate: Option<(f32, u64)>,
-    ) -> (PeerStepStatus, AuthenticatorStepStatus) {
+    ) -> (PeerStepStatus, AuthenticatorStepStatus)
+    where
+        I: TupleById<dyn PeerInnerLayer>,
+    {
         let (package_drop_rate, seed) = package_drop_rate.unwrap_or((0.0, 0));
         let mut rng = StdRng::seed_from_u64(package_drop_rate.to_bits() as u64 ^ 0xdeadbeef ^ seed);
 

@@ -4,21 +4,38 @@ use rustls::{Certificate, ClientConfig, ClientConnection, PrivateKey};
 
 use crate::{
     eap_tls::{CommonTLS, EapCommonResult},
+    layers::mux::HasId,
     message::MessageContent,
     EapEnvironment,
 };
 
 use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};
 
+#[derive(Default)]
 pub struct PeerTlsMethod {
     inner: Option<CommonTLS<ClientConnection>>,
+}
+
+impl HasId for PeerTlsMethod {
+    type Target = dyn PeerInnerLayer;
+    fn id(&self) -> u8 {
+        self.method_identifier()
+    }
+
+    fn get(&self) -> &Self::Target {
+        self
+    }
+
+    fn get_mut(&mut self) -> &mut Self::Target {
+        self
+    }
 }
 
 const METHOD_TLS: u8 = 13;
 
 impl PeerTlsMethod {
     pub fn new() -> Self {
-        Self { inner: None }
+        Self::default()
     }
 
     fn create_common_tls() -> CommonTLS<ClientConnection> {
@@ -90,10 +107,6 @@ impl PeerInnerLayer for PeerTlsMethod {
         METHOD_TLS
     }
 
-    fn start(&mut self, _env: &mut dyn EapEnvironment) -> PeerInnerLayerResult {
-        PeerInnerLayerResult::Noop
-    }
-
     fn recv(
         &mut self,
         msg: &[u8],
@@ -117,7 +130,7 @@ impl PeerInnerLayer for PeerTlsMethod {
 
     fn can_succeed(&self) -> Option<bool> {
         match &self.inner {
-            Some(inner) => Some(!inner.finished),
+            Some(inner) => Some(inner.finished),
             None => Some(false),
         }
     }

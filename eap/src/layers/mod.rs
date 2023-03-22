@@ -4,3 +4,4 @@ pub mod auth;
 pub use auth::AuthLayer;
 pub mod peer;
 pub use peer::PeerLayer;
+pub mod mux;

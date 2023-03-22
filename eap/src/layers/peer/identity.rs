@@ -1,4 +1,4 @@
-use crate::{message::MessageContent, EapEnvironment};
+use crate::{layers::mux::HasId, message::MessageContent, EapEnvironment};
 
 use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};
 
@@ -16,13 +16,24 @@ impl PeerIdentityMethod {
     }
 }
 
+impl HasId for PeerIdentityMethod {
+    type Target = dyn PeerInnerLayer;
+    fn id(&self) -> u8 {
+        self.method_identifier()
+    }
+
+    fn get(&self) -> &Self::Target {
+        self
+    }
+
+    fn get_mut(&mut self) -> &mut Self::Target {
+        self
+    }
+}
+
 impl PeerInnerLayer for PeerIdentityMethod {
     fn method_identifier(&self) -> u8 {
         1
-    }
-
-    fn start(&mut self, _env: &mut dyn EapEnvironment) -> PeerInnerLayerResult {
-        PeerInnerLayerResult::Noop
     }
 
     fn recv(
@@ -56,7 +67,6 @@ mod tests {
         let mut env = crate::DefaultEnvironment::new();
         let mut method = PeerIdentityMethod::new(b"bob");
         assert_eq!(method.method_identifier(), 1);
-        assert_eq!(method.start(&mut env), PeerInnerLayerResult::Noop);
 
         let m = Message::new(crate::message::MessageCode::Response, 0, b"");
 

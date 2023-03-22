@@ -1,11 +1,16 @@
 use crate::{
-    layers::{eap_layer::EapStatus, peer::AnyMethod, EapLayer, PeerLayer},
+    layers::{
+        eap_layer::EapStatus,
+        mux::TupleById,
+        peer::{peer_layer::PeerInnerLayer, PeerIdentityMethod, PeerMD5ChallengeMethod},
+        EapLayer, PeerLayer,
+    },
     DefaultEnvironment,
 };
 
-pub struct Peer {
+pub struct Peer<I> {
     env: DefaultEnvironment,
-    inner: EapLayer<PeerLayer<AnyMethod>>,
+    inner: EapLayer<PeerLayer<I>>,
     buffer: Vec<u8>,
 }
 
@@ -21,36 +26,45 @@ pub struct PeerStepResult {
     pub response: Option<Vec<u8>>,
 }
 
-impl Peer {
+impl Peer<(PeerIdentityMethod, PeerMD5ChallengeMethod)> {
     pub fn new(identity: &str, password: &str) -> Self {
         Self {
-            inner: EapLayer::new(PeerLayer::new(vec![
-                AnyMethod::Identity(crate::layers::peer::PeerIdentityMethod::new(
-                    identity.as_bytes(),
-                )),
-                AnyMethod::MD5Challenge(crate::layers::peer::PeerMD5ChallengeMethod::new(
-                    password.as_bytes(),
-                )),
-            ])),
+            inner: EapLayer::new(
+                PeerLayer::new()
+                    .with(crate::layers::peer::PeerIdentityMethod::new(
+                        identity.as_bytes(),
+                    ))
+                    .with(crate::layers::peer::PeerMD5ChallengeMethod::new(
+                        password.as_bytes(),
+                    )),
+            ),
             env: DefaultEnvironment::new(),
             buffer: Vec::new(),
         }
     }
+}
 
-    #[cfg(feature = "tls")]
+#[cfg(feature = "tls")]
+impl Peer<(PeerIdentityMethod, crate::layers::peer::PeerTlsMethod)> {
     pub fn new_tls(identity: &str) -> Self {
         Self {
-            inner: EapLayer::new(PeerLayer::new(vec![
-                AnyMethod::Identity(crate::layers::peer::PeerIdentityMethod::new(
-                    identity.as_bytes(),
-                )),
-                AnyMethod::Tls(crate::layers::peer::PeerTlsMethod::new()),
-            ])),
+            inner: EapLayer::new(
+                PeerLayer::new()
+                    .with(crate::layers::peer::PeerIdentityMethod::new(
+                        identity.as_bytes(),
+                    ))
+                    .with(crate::layers::peer::PeerTlsMethod::new()),
+            ),
             env: DefaultEnvironment::new(),
             buffer: Vec::new(),
         }
     }
+}
 
+impl<I> Peer<I>
+where
+    I: TupleById<dyn PeerInnerLayer>,
+{
     pub fn receive(&mut self, data: &[u8]) {
         self.buffer = data.to_vec();
     }

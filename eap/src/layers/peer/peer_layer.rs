@@ -1,4 +1,5 @@
 use crate::{
+    layers::mux::{HasId, TupleAppend, TupleById},
     message::{Message, MessageContent},
     EapEnvironment,
 };
@@ -11,17 +12,30 @@ use crate::layers::eap_layer::{InnerLayer as ThisLayer, InnerLayerOutput as This
 /// Make Server via EAP TLS a requirement for this
 
 #[derive(Clone)]
-pub struct PeerLayer<I: PeerInnerLayer> {
-    next_layer: Option<I>,
-    candidates: Vec<I>, // <- should be okay for now
+pub struct PeerLayer<I> {
+    next_layer: Option<u8>,
+    candidates: I,
 }
 
-impl<I: PeerInnerLayer> PeerLayer<I> {
+impl PeerLayer<()> {
     #[allow(unused)]
-    pub fn new(candidates: Vec<I>) -> Self {
+    pub fn new() -> Self {
         Self {
             next_layer: None,
-            candidates,
+            candidates: (),
+        }
+    }
+}
+
+impl<I> PeerLayer<I> {
+    pub fn with<P>(self, candidate: P) -> PeerLayer<<I as TupleAppend<P>>::Output>
+    where
+        I: TupleAppend<P>,
+        P: HasId<Target = dyn PeerInnerLayer>,
+    {
+        PeerLayer {
+            next_layer: None,
+            candidates: self.candidates.append(candidate),
         }
     }
 }
@@ -30,16 +44,16 @@ pub struct RecvMeta<'a> {
     pub message: &'a Message,
 }
 
-pub trait PeerInnerLayer: Clone {
+pub trait PeerInnerLayer {
     /* */
     fn method_identifier(&self) -> u8;
-    fn start(&mut self, env: &mut dyn EapEnvironment) -> PeerInnerLayerResult;
     fn recv(
         &mut self,
         msg: &[u8],
         meta: &RecvMeta,
         env: &mut dyn EapEnvironment,
     ) -> PeerInnerLayerResult;
+
     fn selectable_by_nak(&self) -> bool {
         true
     }
@@ -47,6 +61,8 @@ pub trait PeerInnerLayer: Clone {
     fn can_succeed(&self) -> Option<bool> {
         None
     }
+
+    fn reset(&mut self) {}
 }
 
 pub const METHOD_CLIENT_PROPOSAL: u8 = 3;
@@ -58,16 +74,22 @@ pub enum PeerInnerLayerResult {
     Failed,
 }
 
-impl<I: PeerInnerLayer> ThisLayer for PeerLayer<I> {
+impl<I> ThisLayer for PeerLayer<I>
+where
+    I: TupleById<dyn PeerInnerLayer>,
+{
     fn is_peer(&self) -> bool {
         true
     }
 
-    fn can_succeed(&self) -> bool {
-        self.next_layer
-            .as_ref()
-            .and_then(|layer| layer.can_succeed())
-            .unwrap_or(true)
+    fn can_succeed(&mut self) -> bool {
+        for c in self.candidates.iter() {
+            if Some(false) == c.can_succeed() {
+                return false;
+            }
+        }
+
+        true
     }
 
     fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
@@ -82,46 +104,56 @@ impl<I: PeerInnerLayer> ThisLayer for PeerLayer<I> {
         }
 
         let method_identifier = msg.data[0];
-        if Some(method_identifier)
-            != self
-                .next_layer
-                .as_ref()
-                .map(|layer| layer.method_identifier())
-        {
+        if Some(method_identifier) != self.next_layer {
             // Find a candidate
-            for c in self.candidates.iter_mut() {
-                if c.method_identifier() == method_identifier {
-                    let mut c = c.clone();
+            match self.candidates.get_by_id_mut(method_identifier) {
+                Some(c) => {
+                    c.reset();
+                    self.next_layer = Some(method_identifier);
                     let res = c.recv(&msg.data[1..], &RecvMeta { message: msg }, env);
-                    self.next_layer = Some(c);
-                    return self.process_result(res, env);
+                    self.process_result(res, env)
+                }
+                None => {
+                    let mut data = vec![METHOD_CLIENT_PROPOSAL];
+                    for c in self.candidates.iter() {
+                        if c.selectable_by_nak() {
+                            data.push(c.method_identifier());
+                        }
+                    }
+
+                    ThisLayerResult::Send(MessageContent { data })
                 }
             }
-
-            // No candidate found
-            // Send NAK.
-
-            let mut data = vec![METHOD_CLIENT_PROPOSAL];
-            for c in self.candidates.iter_mut() {
-                if c.selectable_by_nak() {
-                    data.push(c.method_identifier());
-                }
-            }
-
-            ThisLayerResult::Send(MessageContent { data })
         } else {
-            // Found a candidate
-            let res = self.next_layer.as_mut().unwrap().recv(
-                &msg.data[1..],
-                &RecvMeta { message: msg },
-                env,
-            );
-            self.process_result(res, env)
+            match self.candidates.get_by_id_mut(method_identifier) {
+                Some(c) => {
+                    let res = c.recv(&msg.data[1..], &RecvMeta { message: msg }, env);
+                    self.process_result(res, env)
+                }
+                None => {
+                    unreachable!()
+                }
+            }
+        }
+    }
+
+    fn is_auth(&self) -> bool {
+        !self.is_peer()
+    }
+
+    fn step(
+        &mut self,
+        input: crate::layers::eap_layer::InnerLayerInput,
+        env: &mut dyn EapEnvironment,
+    ) -> ThisLayerResult {
+        match input {
+            crate::layers::eap_layer::InnerLayerInput::Start => self.start(env),
+            crate::layers::eap_layer::InnerLayerInput::Recv(msg) => self.recv(&msg, env),
         }
     }
 }
 
-impl<I: PeerInnerLayer> PeerLayer<I> {
+impl<I> PeerLayer<I> {
     fn process_result(
         &mut self,
         res: PeerInnerLayerResult,
@@ -130,7 +162,7 @@ impl<I: PeerInnerLayer> PeerLayer<I> {
         match res {
             PeerInnerLayerResult::Noop => ThisLayerResult::Noop,
             PeerInnerLayerResult::Send(data) => {
-                let data = vec![self.next_layer.as_ref().unwrap().method_identifier()]
+                let data = vec![self.next_layer.unwrap()]
                     .into_iter()
                     .chain(data.data.into_iter())
                     .collect();
@@ -158,10 +190,6 @@ mod tests {
             self.method_identifier
         }
 
-        fn start(&mut self, _env: &mut dyn EapEnvironment) -> PeerInnerLayerResult {
-            self.events.remove(0)
-        }
-
         fn recv(
             &mut self,
             _msg: &[u8],
@@ -176,12 +204,27 @@ mod tests {
         }
     }
 
+    impl HasId for DummyProtocol {
+        type Target = dyn PeerInnerLayer;
+        fn id(&self) -> u8 {
+            self.method_identifier()
+        }
+
+        fn get(&self) -> &Self::Target {
+            self
+        }
+
+        fn get_mut(&mut self) -> &mut Self::Target {
+            self
+        }
+    }
+
     #[test]
     fn peer_is_peer() {
-        let layer = PeerLayer::new(vec![DummyProtocol {
+        let layer = PeerLayer::new().with(DummyProtocol {
             method_identifier: 1,
             events: vec![],
-        }]);
+        });
         assert!(layer.is_peer());
         assert!(!layer.is_auth());
     }
@@ -189,8 +232,8 @@ mod tests {
     #[test]
     fn conversation() {
         let mut env = DefaultEnvironment::new();
-        let mut layer = PeerLayer::new(vec![
-            DummyProtocol {
+        let mut layer = PeerLayer::new()
+            .with(DummyProtocol {
                 method_identifier: 1,
                 events: vec![
                     PeerInnerLayerResult::Send(MessageContent {
@@ -198,18 +241,17 @@ mod tests {
                     }),
                     PeerInnerLayerResult::Failed,
                 ],
-            },
-            DummyProtocol {
+            })
+            .with(DummyProtocol {
                 method_identifier: 4,
                 events: vec![PeerInnerLayerResult::Send(MessageContent {
                     data: b"Ok".to_vec(),
                 })],
-            },
-            DummyProtocol {
+            })
+            .with(DummyProtocol {
                 method_identifier: 2,
                 events: vec![PeerInnerLayerResult::Failed],
-            },
-        ]);
+            });
 
         assert_eq!(layer.start(&mut env), ThisLayerResult::Noop);
 
