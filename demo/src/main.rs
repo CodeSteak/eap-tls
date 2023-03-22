@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use eap::{Authenticator, AuthenticatorStepStatus, PeerStepResult, PeerStepStatus};
+use eap::{Authenticator, AuthenticatorStepStatus, PeerStepStatus};
 use wifieap::{peer::EapPeer, server::EapServer, EapStatus, TlsConfig};
 
 fn main() {
