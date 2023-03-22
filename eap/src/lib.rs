@@ -6,6 +6,9 @@ mod layers;
 mod message;
 pub mod util;
 
+#[cfg(feature = "tls")]
+pub use dummycert::TlsConfig;
+
 pub trait EapEnvironment {
     fn set_name(&mut self, name: &[u8]); // <- Extract Somehow
 

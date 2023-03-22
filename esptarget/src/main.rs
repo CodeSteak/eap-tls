@@ -34,8 +34,12 @@ fn main() {
     let mut thread = esp_idf_sys::pthread_t::default();
     unsafe {
         extern "C" fn run_wrapper(_: *mut std::ffi::c_void) -> *mut std::ffi::c_void {
-            run(true);
-            run(false);
+            run(true, true);
+            run(true, false);
+
+            run(false, true);
+            run(false, false);
+
             std::ptr::null_mut()
         }
         esp_idf_sys::pthread_create(
@@ -57,14 +61,27 @@ fn print_unix_time() {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_secs();
-    println!("unix time: {}", unix_time);
+    println!("unix time: {}\n", unix_time);
 }
 
-fn run(print: bool) {
+fn run(print: bool, ed: bool) {
+    print!("print={print} ed={ed}");
     print_unix_time();
 
-    let mut server = Authenticator::new_tls();
-    let mut client = Peer::new_tls("user");
+    let mut server = Authenticator::new_tls(if ed {
+        TlsConfig::dummy_server_ed25519()
+    } else {
+        TlsConfig::dummy_client_rsa()
+    });
+
+    let mut client = Peer::new_tls(
+        "user",
+        if ed {
+            TlsConfig::dummy_client_ed25519()
+        } else {
+            TlsConfig::dummy_client_rsa()
+        },
+    );
 
     let start = Instant::now();
 

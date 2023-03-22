@@ -17,8 +17,8 @@ fn main() {
 }
 
 fn own_impl_tls_both() {
-    let mut server = Authenticator::new_tls();
-    let mut client = eap::Peer::new_tls("user");
+    let mut server = Authenticator::new_tls(TlsConfig::dummy_server());
+    let mut client = eap::Peer::new_tls("user", TlsConfig::dummy_client());
 
     let start = Instant::now();
 
@@ -56,7 +56,7 @@ fn own_impl_tls_both() {
 }
 
 fn own_impl_tls_client() {
-    let mut peer = eap::Peer::new_tls("user");
+    let mut peer = eap::Peer::new_tls("user", TlsConfig::dummy_client());
     let mut server = EapServer::buider()
         .set_tls_config(TlsConfig::dummy_server())
         .allow_tls()
@@ -98,7 +98,7 @@ fn own_impl_tls_server() {
         .set_tls_config(TlsConfig::dummy_client())
         .build();
 
-    let mut server = Authenticator::new_tls();
+    let mut server = Authenticator::new_tls(TlsConfig::dummy_server());
 
     for i in 0..100 {
         println!("=== {i}");

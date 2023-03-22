@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use dummycert::TlsConfig;
 use rustls::{Certificate, ClientConfig, ClientConnection, PrivateKey};
 
 use crate::{
@@ -11,8 +12,8 @@ use crate::{
 
 use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};
 
-#[derive(Default)]
 pub struct PeerTlsMethod {
+    config: TlsConfig,
     inner: Option<CommonTLS<ClientConnection>>,
 }
 
@@ -34,14 +35,15 @@ impl HasId for PeerTlsMethod {
 const METHOD_TLS: u8 = 13;
 
 impl PeerTlsMethod {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(config: TlsConfig) -> Self {
+        Self {
+            config,
+            inner: None,
+        }
     }
 
-    fn create_common_tls() -> CommonTLS<ClientConnection> {
-        let server_config = dummycert::TlsConfig::dummy_server();
-
-        let server_cert = rustls_pemfile::read_all(&mut server_config.server_cert.as_ref())
+    fn create_common_tls(config: &TlsConfig) -> CommonTLS<ClientConnection> {
+        let server_cert = rustls_pemfile::read_all(&mut config.server_cert.as_ref())
             .unwrap()
             .into_iter()
             .flat_map(|cert| match cert {
@@ -52,7 +54,7 @@ impl PeerTlsMethod {
 
         assert!(!server_cert.is_empty());
 
-        let server_key = rustls_pemfile::read_one(&mut server_config.server_key.as_ref())
+        let server_key = rustls_pemfile::read_one(&mut config.server_key.as_ref())
             .unwrap()
             .and_then(|cert| match cert {
                 rustls_pemfile::Item::PKCS8Key(key) => Some(PrivateKey(key)),
@@ -60,7 +62,7 @@ impl PeerTlsMethod {
             })
             .unwrap();
 
-        let ca_cert = rustls_pemfile::read_all(&mut server_config.ca_cert.as_ref())
+        let ca_cert = rustls_pemfile::read_all(&mut config.ca_cert.as_ref())
             .unwrap()
             .into_iter()
             .flat_map(|cert| match cert {
@@ -95,10 +97,7 @@ impl PeerTlsMethod {
 
 impl Clone for PeerTlsMethod {
     fn clone(&self) -> Self {
-        // Remove me after refactor
-        eprintln!("ERROR: PeerTlsMethod is not clonable.");
-
-        PeerTlsMethod::new()
+        PeerTlsMethod::new(self.config.clone())
     }
 }
 
@@ -115,7 +114,7 @@ impl PeerInnerLayer for PeerTlsMethod {
     ) -> PeerInnerLayerResult {
         let inner = self
             .inner
-            .get_or_insert_with(PeerTlsMethod::create_common_tls);
+            .get_or_insert_with(|| PeerTlsMethod::create_common_tls(&self.config));
 
         match inner.process(msg, false) {
             Ok(EapCommonResult::Finished) => {

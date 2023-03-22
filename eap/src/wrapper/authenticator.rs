@@ -38,12 +38,12 @@ impl Authenticator {
     }
 
     #[cfg(feature = "tls")]
-    pub fn new_tls() -> Self {
+    pub fn new_tls(config: dummycert::TlsConfig) -> Self {
         use crate::layers::auth::AuthTlsMethod;
         Self {
             inner: EapLayer::new(AuthLayer::new(vec![
                 AuthIdentityMethod::new().into(),
-                AuthTlsMethod::new().into(),
+                AuthTlsMethod::new(config).into(),
             ])),
             env: DefaultEnvironment::new(),
             buffer: Vec::new(),

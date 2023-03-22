@@ -1,6 +1,7 @@
 use crate::eap_tls::{CommonTLS, EapCommonResult};
 use std::sync::Arc;
 
+use dummycert::TlsConfig;
 use rustls::{
     server::AllowAnyAuthenticatedClient, Certificate, PrivateKey, ServerConfig, ServerConnection,
 };
@@ -14,26 +15,25 @@ use super::auth_layer::{
 const METHOD_TLS: u8 = 13;
 
 pub struct AuthTlsMethod {
+    config: TlsConfig,
     inner: Option<CommonTLS<ServerConnection>>,
 }
 
 impl Clone for AuthTlsMethod {
     fn clone(&self) -> Self {
-        // Remove me after refactor
-        eprintln!("ERROR: AuthTlsMethod is not clonable.");
-
-        AuthTlsMethod::new()
+        AuthTlsMethod::new(self.config.clone())
     }
 }
 
 impl AuthTlsMethod {
-    pub fn new() -> Self {
-        Self { inner: None }
+    pub fn new(config: TlsConfig) -> Self {
+        Self {
+            config,
+            inner: None,
+        }
     }
 
-    fn create_common_tls() -> CommonTLS<ServerConnection> {
-        let server_config = dummycert::TlsConfig::dummy_server();
-
+    fn create_common_tls(server_config: &TlsConfig) -> CommonTLS<ServerConnection> {
         let server_cert = rustls_pemfile::read_all(&mut server_config.server_cert.as_ref())
             .unwrap()
             .into_iter()
@@ -91,7 +91,7 @@ impl ThisLayer for AuthTlsMethod {
     fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
         let inner = self
             .inner
-            .get_or_insert_with(AuthTlsMethod::create_common_tls);
+            .get_or_insert_with(|| AuthTlsMethod::create_common_tls(&self.config));
 
         ThisLayerResult::Send(MessageContent {
             data: inner.start_packet(),
@@ -106,7 +106,7 @@ impl ThisLayer for AuthTlsMethod {
     ) -> ThisLayerResult {
         let inner = self
             .inner
-            .get_or_insert_with(AuthTlsMethod::create_common_tls);
+            .get_or_insert_with(|| AuthTlsMethod::create_common_tls(&self.config));
 
         match inner.process(msg, true) {
             Ok(EapCommonResult::Finished) => ThisLayerResult::Finished,
