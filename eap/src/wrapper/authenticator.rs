@@ -1,7 +1,8 @@
 use crate::{
     layers::{
         self,
-        auth::{AnyMethod, AuthIdentityMethod, AuthMD5ChallengeMethod},
+        auth::{AuthIdentityMethod, AuthInnerLayer, AuthMD5ChallengeMethod},
+        mux::TupleById,
         AuthLayer, EapLayer,
     },
     DefaultEnvironment,
@@ -19,37 +20,46 @@ pub enum AuthenticatorStepStatus {
     Finished,
 }
 
-pub struct Authenticator {
+pub struct Authenticator<I> {
     env: DefaultEnvironment,
-    inner: EapLayer<AuthLayer<AnyMethod>>,
+    inner: EapLayer<AuthLayer<I>>,
     buffer: Vec<u8>,
 }
 
-impl Authenticator {
+impl Authenticator<(AuthIdentityMethod, AuthMD5ChallengeMethod)> {
     pub fn new(password: &str) -> Self {
         Self {
-            inner: EapLayer::new(AuthLayer::new(vec![
-                AuthIdentityMethod::new().into(),
-                AuthMD5ChallengeMethod::new(password.as_bytes()).into(),
-            ])),
+            inner: EapLayer::new(
+                AuthLayer::new()
+                    .with(AuthIdentityMethod::new())
+                    .with(AuthMD5ChallengeMethod::new(password.as_bytes())),
+            ),
             env: DefaultEnvironment::new(),
             buffer: Vec::new(),
         }
     }
+}
 
-    #[cfg(feature = "tls")]
+#[cfg(feature = "tls")]
+impl Authenticator<(AuthIdentityMethod, crate::layers::auth::AuthTlsMethod)> {
     pub fn new_tls(config: dummycert::TlsConfig) -> Self {
         use crate::layers::auth::AuthTlsMethod;
         Self {
-            inner: EapLayer::new(AuthLayer::new(vec![
-                AuthIdentityMethod::new().into(),
-                AuthTlsMethod::new(config).into(),
-            ])),
+            inner: EapLayer::new(
+                AuthLayer::new()
+                    .with(AuthIdentityMethod::new())
+                    .with(AuthTlsMethod::new(config)),
+            ),
             env: DefaultEnvironment::new(),
             buffer: Vec::new(),
         }
     }
+}
 
+impl<I> Authenticator<I>
+where
+    I: TupleById<dyn AuthInnerLayer>,
+{
     pub fn receive(&mut self, data: &[u8]) {
         self.buffer = data.to_vec();
     }

@@ -1,12 +1,17 @@
 pub trait TupleAppend<X> {
     type Output;
     fn append(self, t: X) -> Self::Output;
+    fn len(&self) -> usize;
 }
 
 impl<X> TupleAppend<X> for () {
     type Output = (X,);
     fn append(self, x: X) -> Self::Output {
         (x,)
+    }
+
+    fn len(&self) -> usize {
+        0
     }
 }
 
@@ -19,34 +24,29 @@ pub trait HasId {
 }
 
 pub trait TupleById<Target: ?Sized> {
-    fn get_by_id_mut(&mut self, id: u8) -> Option<&mut Target>;
+    fn id_to_idx(&self, id: u8) -> Option<usize>;
+
+    fn get_by_id_mut(&mut self, id: u8) -> Option<&mut Target> {
+        self.id_to_idx(id).and_then(|idx| self.get_by_pos_mut(idx))
+    }
 
     fn get_by_pos(&self, idx: usize) -> Option<&Target>;
 
     fn get_by_pos_mut(&mut self, idx: usize) -> Option<&mut Target>;
+
     // Note: This can not be done via standard iterator, because of target type.
-    fn iter(&mut self) -> TupleByIdIterator<Self, Target>;
-}
+    fn iter(&self) -> TupleByIdIterator<Self, Target>;
 
-impl<Target> TupleById<Target> for () {
-    fn get_by_id_mut(&mut self, _id: u8) -> Option<&mut Target> {
-        None
+    fn len(&self) -> usize {
+        self.iter().count()
     }
 
-    fn get_by_pos(&self, _idx: usize) -> Option<&Target> {
-        None
+    fn first(&self) -> &Target {
+        self.get_by_pos(0).unwrap()
     }
 
-    fn get_by_pos_mut(&mut self, _idx: usize) -> Option<&mut Target> {
-        None
-    }
-
-    fn iter(&mut self) -> TupleByIdIterator<Self, Target> {
-        TupleByIdIterator {
-            idx: 0,
-            inner: self,
-            _marker: std::marker::PhantomData,
-        }
+    fn first_mut(&mut self) -> &mut Target {
+        self.get_by_pos_mut(0).unwrap()
     }
 }
 
@@ -56,7 +56,7 @@ pub struct TupleByIdIterator<'a, I: ?Sized, Target: ?Sized> {
     _marker: std::marker::PhantomData<Target>,
 }
 
-impl<'a, I, Target: ?Sized + 'a> Iterator for TupleByIdIterator<'a, I, Target>
+impl<'a, I: ?Sized, Target: ?Sized + 'a> Iterator for TupleByIdIterator<'a, I, Target>
 where
     I: TupleById<Target>,
 {
@@ -70,6 +70,8 @@ where
     }
 }
 
+fn dummy_usage<I>() {}
+
 macro_rules! tuple_impl {
     ($($n:ident),+) => {
         #[allow(non_snake_case)]
@@ -79,6 +81,15 @@ macro_rules! tuple_impl {
                 let ($($n),+,) = self;
                 ($($n),+, x)
             }
+
+            fn len(&self) -> usize {
+                let counter = 0;
+                $(
+                    dummy_usage::<$n>();
+                    let counter = counter + 1;
+                )+
+                counter
+            }
         }
 
         #[allow(non_snake_case)]
@@ -86,14 +97,17 @@ macro_rules! tuple_impl {
         where
             $($n: HasId<Target = Target>,)+
         {
-            fn get_by_id_mut(&mut self, id: u8) -> Option<&mut Target> {
+            fn id_to_idx(&self, id: u8) -> Option<usize> {
                 let ($($n),+,) = self;
+                let counter = 0;
                 $(
                     if $n.id() == id {
-                        return Some($n.get_mut());
+                        return Some(counter);
                     }
+                    let counter = counter + 1;
                 )+
 
+                let _ = counter;
                 None
             }
 
@@ -125,7 +139,7 @@ macro_rules! tuple_impl {
                 None
             }
 
-            fn iter(&mut self) -> TupleByIdIterator<Self, Target> {
+            fn iter(&self) -> TupleByIdIterator<Self, Target> {
                 TupleByIdIterator {
                     idx: 0,
                     inner: self,

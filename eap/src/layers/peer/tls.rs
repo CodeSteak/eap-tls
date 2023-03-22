@@ -7,7 +7,6 @@ use crate::{
     eap_tls::{CommonTLS, EapCommonResult},
     layers::mux::HasId,
     message::MessageContent,
-    EapEnvironment,
 };
 
 use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};

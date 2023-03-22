@@ -1,6 +1,7 @@
 use std::vec;
 
 use crate::{
+    layers::mux::{HasId, TupleAppend, TupleById},
     message::{Message, MessageCode, MessageContent},
     EapEnvironment,
 };
@@ -8,10 +9,10 @@ use crate::{
 use crate::layers::eap_layer::{InnerLayer as ThisLayer, InnerLayerOutput as ThisLayerResult};
 
 #[derive(Clone)]
-pub struct AuthLayer<I: AuthInnerLayer> {
+pub struct AuthLayer<I> {
     peer_has_sent_nak: bool, // RFC allows only one NAK per session
-    next_layer: I,
-    candidates: Vec<I>, // <- should be okay for now
+    next_layer: u8,
+    candidates: I,
 }
 
 pub const METHOD_CLIENT_PROPOSAL: u8 = 3;
@@ -20,7 +21,7 @@ pub struct RecvMeta<'a> {
     pub message: &'a Message,
 }
 
-pub trait AuthInnerLayer: Clone {
+pub trait AuthInnerLayer {
     fn method_identifier(&self) -> u8;
     fn start(&mut self, env: &mut dyn EapEnvironment) -> AuthInnerLayerResult;
     fn recv(
@@ -42,13 +43,16 @@ pub enum AuthInnerLayerResult {
     NextLayer,
 }
 
-impl<I: AuthInnerLayer> ThisLayer for AuthLayer<I> {
+impl<I> ThisLayer for AuthLayer<I>
+where
+    I: TupleById<dyn AuthInnerLayer>,
+{
     fn is_peer(&self) -> bool {
         false
     }
 
     fn start(&mut self, env: &mut dyn EapEnvironment) -> ThisLayerResult {
-        let res = self.next_layer.start(env);
+        let res = self.current_layer().start(env);
         self.process_result(res, env)
     }
 
@@ -74,9 +78,9 @@ impl<I: AuthInnerLayer> ThisLayer for AuthLayer<I> {
                 if candidate.selectable_by_nak()
                     && msg.data[1..].contains(&candidate.method_identifier())
                 {
-                    self.next_layer = candidate.clone();
+                    self.next_layer = candidate.method_identifier();
 
-                    let res = self.next_layer.start(env);
+                    let res = self.current_layer().start(env);
                     return self.process_result(res, env);
                 }
             }
@@ -84,12 +88,12 @@ impl<I: AuthInnerLayer> ThisLayer for AuthLayer<I> {
             return ThisLayerResult::Failed; // <- no matching method
         }
 
-        if method_identifier != self.next_layer.method_identifier() {
+        if method_identifier != self.next_layer {
             return ThisLayerResult::Failed;
         }
 
         let res = self
-            .next_layer
+            .current_layer()
             .recv(&msg.data[1..], &RecvMeta { message: msg }, env);
 
         self.process_result(res, env)
@@ -100,14 +104,52 @@ impl<I: AuthInnerLayer> ThisLayer for AuthLayer<I> {
     }
 }
 
-impl<I: AuthInnerLayer> AuthLayer<I> {
-    pub fn new(candidates: Vec<I>) -> Self {
-        assert!(!candidates.is_empty());
+impl AuthLayer<()> {
+    #[allow(unused)]
+    pub fn new() -> Self {
+        Self {
+            peer_has_sent_nak: false,
+            next_layer: 0,
+            candidates: (),
+        }
+    }
+}
+
+impl<I> AuthLayer<I> {
+    pub fn with<P>(self, candidate: P) -> AuthLayer<<I as TupleAppend<P>>::Output>
+    where
+        I: TupleAppend<P>,
+        P: HasId<Target = dyn AuthInnerLayer>,
+    {
         AuthLayer {
-            next_layer: candidates[0].clone(),
+            peer_has_sent_nak: false,
+            next_layer: if self.candidates.len() == 0 {
+                candidate.id()
+            } else {
+                self.next_layer
+            },
+            candidates: self.candidates.append(candidate),
+        }
+    }
+}
+
+impl<I> AuthLayer<I>
+where
+    I: TupleById<dyn AuthInnerLayer>,
+{
+    #[allow(unused)]
+    pub fn from_layers(candidates: I) -> Self {
+        let next_layer = candidates.first().method_identifier();
+        Self {
+            next_layer,
             candidates,
             peer_has_sent_nak: false,
         }
+    }
+
+    fn current_layer(&mut self) -> &mut dyn AuthInnerLayer {
+        // this is ensured by construction, see `new`
+        self.candidates.get_by_id_mut(self.next_layer).unwrap()
     }
 
     fn process_result(
@@ -117,17 +159,22 @@ impl<I: AuthInnerLayer> AuthLayer<I> {
     ) -> ThisLayerResult {
         match res {
             AuthInnerLayerResult::Send(msg) => {
-                let id = self.next_layer.method_identifier();
+                let id = self.next_layer;
                 let data = add_message_identifier_to_data(id, msg.data);
                 ThisLayerResult::Send(MessageContent { data })
             }
             AuthInnerLayerResult::Finished => ThisLayerResult::Finished,
             AuthInnerLayerResult::Failed => ThisLayerResult::Failed,
             AuthInnerLayerResult::NextLayer => {
+                let current_idx = self.candidates.id_to_idx(self.next_layer).unwrap();
+                self.next_layer = self
+                    .candidates
+                    .get_by_pos((current_idx + 1) % self.candidates.len())
+                    .unwrap()
+                    .method_identifier();
+
                 if self.candidates.len() > 1 {
-                    // TODO: select properly
-                    self.next_layer = self.candidates[1].clone();
-                    let res = self.next_layer.start(env);
+                    let res = self.current_layer().start(env);
                     self.process_result(res, env)
                 } else {
                     ThisLayerResult::Failed // <- Internal Issue
@@ -166,6 +213,22 @@ mod tests {
         }
     }
 
+    impl HasId for DummyProtocol {
+        type Target = dyn AuthInnerLayer;
+
+        fn id(&self) -> u8 {
+            self.method_identifier
+        }
+
+        fn get(&self) -> &Self::Target {
+            self
+        }
+
+        fn get_mut(&mut self) -> &mut Self::Target {
+            self
+        }
+    }
+
     impl AuthInnerLayer for DummyProtocol {
         fn method_identifier(&self) -> u8 {
             self.method_identifier
@@ -187,7 +250,7 @@ mod tests {
 
     #[test]
     fn auth_layer_is_auth() {
-        let layer = AuthLayer::new(vec![DummyProtocol::new(1, &[])]);
+        let layer = AuthLayer::from_layers((DummyProtocol::new(1, &[]),));
         assert!(!layer.is_peer());
         assert!(layer.is_auth());
     }
@@ -195,7 +258,7 @@ mod tests {
     #[test]
     fn auth_layer_error_and_normal() {
         let mut env = DefaultEnvironment::new();
-        let mut layer = AuthLayer::new(vec![
+        let mut layer = AuthLayer::from_layers((
             DummyProtocol::new(
                 1,
                 &[
@@ -229,7 +292,7 @@ mod tests {
                     data: b"don't select me".to_vec(),
                 })],
             ),
-        ]);
+        ));
 
         //  Auth inits conversation
         assert_eq!(

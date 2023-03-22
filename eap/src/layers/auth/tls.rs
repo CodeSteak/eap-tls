@@ -1,4 +1,7 @@
-use crate::eap_tls::{CommonTLS, EapCommonResult};
+use crate::{
+    eap_tls::{CommonTLS, EapCommonResult},
+    layers::mux::HasId,
+};
 use std::sync::Arc;
 
 use dummycert::TlsConfig;
@@ -17,6 +20,22 @@ const METHOD_TLS: u8 = 13;
 pub struct AuthTlsMethod {
     config: TlsConfig,
     inner: Option<CommonTLS<ServerConnection>>,
+}
+
+impl HasId for AuthTlsMethod {
+    type Target = dyn ThisLayer;
+
+    fn id(&self) -> u8 {
+        self.method_identifier()
+    }
+
+    fn get(&self) -> &Self::Target {
+        self
+    }
+
+    fn get_mut(&mut self) -> &mut Self::Target {
+        self
+    }
 }
 
 impl Clone for AuthTlsMethod {

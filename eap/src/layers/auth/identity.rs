@@ -1,4 +1,4 @@
-use crate::{message::MessageContent, EapEnvironment};
+use crate::{layers::mux::HasId, message::MessageContent, EapEnvironment};
 
 use super::auth_layer::{
     AuthInnerLayer as ThisLayer, AuthInnerLayerResult as ThisLayerResult, RecvMeta,
@@ -6,12 +6,28 @@ use super::auth_layer::{
 
 const METHOD_IDENTITY: u8 = 1;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct AuthIdentityMethod;
 
 impl AuthIdentityMethod {
     pub fn new() -> Self {
         Self
+    }
+}
+
+impl HasId for AuthIdentityMethod {
+    type Target = dyn ThisLayer;
+
+    fn id(&self) -> u8 {
+        self.method_identifier()
+    }
+
+    fn get(&self) -> &Self::Target {
+        self
+    }
+
+    fn get_mut(&mut self) -> &mut Self::Target {
+        self
     }
 }
 

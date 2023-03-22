@@ -1,4 +1,5 @@
 use crate::layers::auth::auth_layer::{AuthInnerLayer, AuthInnerLayerResult};
+use crate::layers::mux::HasId;
 use crate::message::MessageContent;
 use crate::EapEnvironment;
 
@@ -11,6 +12,22 @@ pub struct AuthMD5ChallengeMethod {
     password: Vec<u8>,
     value: Vec<u8>, // <- Optional
     challange_data: [u8; 16],
+}
+
+impl HasId for AuthMD5ChallengeMethod {
+    type Target = dyn AuthInnerLayer;
+
+    fn id(&self) -> u8 {
+        self.method_identifier()
+    }
+
+    fn get(&self) -> &Self::Target {
+        self
+    }
+
+    fn get_mut(&mut self) -> &mut Self::Target {
+        self
+    }
 }
 
 impl AuthMD5ChallengeMethod {
