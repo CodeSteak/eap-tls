@@ -3,6 +3,7 @@ use std::{
     fmt::{Display, Formatter},
 };
 
+#[deprecated]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MessageContent {
     pub data: Vec<u8>,

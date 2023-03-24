@@ -1,6 +1,6 @@
 use crate::{
     message::{Message, MessageCode, MessageContent},
-    EapEnvironment,
+    EapEnvironment, EapEnvironmentResponse, ResponseMessage,
 };
 
 pub struct EapLayer<N> {
@@ -19,7 +19,6 @@ enum State {
     MessagePending {
         expected_id: u8,
         retransmission_count: u16,
-        last_message: Message,
     },
     Finished,
     Failed,
@@ -60,10 +59,10 @@ pub enum InnerLayerOutput {
     Failed,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EapOutput {
+#[derive(PartialEq, Eq)]
+pub struct EapOutput<'a> {
     pub status: EapStatus,
-    pub message: Option<Message>,
+    pub message: Option<ResponseMessage<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -81,8 +80,8 @@ impl EapStatus {
     }
 }
 
-impl EapOutput {
-    fn send(message: Message) -> Self {
+impl<'a> EapOutput<'a> {
+    fn send(message: ResponseMessage<'a>) -> Self {
         EapOutput {
             status: EapStatus::Ok,
             message: Some(message),
@@ -96,21 +95,21 @@ impl EapOutput {
         }
     }
 
-    fn success(notify: Option<Message>) -> Self {
+    fn success(notify: Option<ResponseMessage<'a>>) -> Self {
         EapOutput {
             status: EapStatus::Success,
             message: notify,
         }
     }
 
-    fn failed(error: StateError, notify: Option<Message>) -> Self {
+    fn failed(error: StateError, notify: Option<ResponseMessage<'a>>) -> Self {
         EapOutput {
             status: EapStatus::Failed(error),
             message: notify,
         }
     }
 
-    fn internal_error(notify: Option<Message>) -> Self {
+    fn internal_error(notify: Option<ResponseMessage<'a>>) -> Self {
         EapOutput {
             status: EapStatus::InternalError,
             message: notify,
@@ -164,7 +163,7 @@ impl<N: InnerLayer> EapLayer<N> {
     /// Note: If there is no event to process after a certain amount of time, send a timeout event
     /// to the state machine. This Timeout should be a few milliseconds. Too many Timeout will
     /// cause the state machine to fail. This value can be adjusted in the environment.
-    pub fn step(&mut self, input: &EapInput, env: &mut dyn EapEnvironment) -> EapOutput {
+    pub fn step<'a>(&mut self, input: &EapInput, env: &'a mut dyn EapEnvironment) -> EapOutput<'a> {
         match input {
             EapInput::Start => self.start(env),
             EapInput::Receive(msg) => self.receive(msg, env),
@@ -172,7 +171,7 @@ impl<N: InnerLayer> EapLayer<N> {
         }
     }
 
-    pub fn start(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
+    pub fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> EapOutput<'a> {
         match &self.state {
             State::Start => {
                 self.state = State::Idle;
@@ -183,7 +182,11 @@ impl<N: InnerLayer> EapLayer<N> {
         }
     }
 
-    pub fn receive(&mut self, message: &[u8], env: &mut dyn EapEnvironment) -> EapOutput {
+    pub fn receive<'a>(
+        &mut self,
+        message: &[u8],
+        env: &'a mut dyn EapEnvironment,
+    ) -> EapOutput<'a> {
         // Reset Timeout counter
         self.timed_out_count = 0;
 
@@ -275,7 +278,7 @@ impl<N: InnerLayer> EapLayer<N> {
         }
     }
 
-    pub fn timeout(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
+    pub fn timeout<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> EapOutput<'a> {
         match self.state {
             State::MessagePending { .. } => {
                 if self.next_layer.is_auth() {
@@ -290,24 +293,23 @@ impl<N: InnerLayer> EapLayer<N> {
         }
     }
 
-    fn on_timeout(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
+    fn on_timeout<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> EapOutput<'a> {
         self.timed_out_count += 1;
         if self.timed_out_count >= env.max_timeout_count() {
             self.state = State::Failed;
             return EapOutput::failed(
                 StateError::Timeout,
-                Some(Message::new(MessageCode::Failure, self.next_id, &[])),
+                Some(env.respond_with(MessageCode::Failure, self.next_id, &[])),
             );
         }
 
         EapOutput::noop()
     }
 
-    fn retransmit(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
+    fn retransmit<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> EapOutput<'a> {
         match &mut self.state {
             State::MessagePending {
                 retransmission_count,
-                last_message,
                 ..
             } => {
                 if *retransmission_count >= env.max_retransmit_count() {
@@ -316,13 +318,16 @@ impl<N: InnerLayer> EapLayer<N> {
 
                 *retransmission_count += 1;
 
-                EapOutput::send(last_message.clone())
+                match env.last_message() {
+                    Ok(msg) => EapOutput::send(msg),
+                    _ => EapOutput::internal_error(None),
+                }
             }
             _ => self.on_invalid_message(env),
         }
     }
 
-    fn on_invalid_message(&mut self, env: &mut dyn EapEnvironment) -> EapOutput {
+    fn on_invalid_message<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> EapOutput<'a> {
         self.invalid_message_count += 1;
         if self.invalid_message_count >= env.max_invalid_message_count() {
             return self.on_fail(StateError::InvalidMessage, env);
@@ -331,15 +336,23 @@ impl<N: InnerLayer> EapLayer<N> {
         EapOutput::noop()
     }
 
-    fn on_fail(&mut self, reason: StateError, _env: &mut dyn EapEnvironment) -> EapOutput {
+    fn on_fail<'a>(
+        &mut self,
+        reason: StateError,
+        env: &'a mut dyn EapEnvironment,
+    ) -> EapOutput<'a> {
         self.state = State::Failed;
         EapOutput::failed(
             reason,
-            Some(Message::new(MessageCode::Failure, self.next_id, &[])),
+            Some(env.respond_with(MessageCode::Failure, self.next_id, &[])),
         )
     }
 
-    fn process_result(&mut self, res: InnerLayerOutput, env: &mut dyn EapEnvironment) -> EapOutput {
+    fn process_result<'a>(
+        &mut self,
+        res: InnerLayerOutput,
+        env: &'a mut dyn EapEnvironment,
+    ) -> EapOutput<'a> {
         match res {
             InnerLayerOutput::Noop => EapOutput::noop(),
             InnerLayerOutput::Send(msg) => self.send_message(msg, env),
@@ -350,7 +363,12 @@ impl<N: InnerLayer> EapLayer<N> {
                     // For success messages the identifier is the same as the last request.
                     // TODO: refactor `next_id to be `last_id`
                     self.next_id = self.next_id.wrapping_sub(1);
-                    EapOutput::success(Some(Message::new(MessageCode::Success, self.next_id, &[])))
+
+                    EapOutput::success(Some(env.respond_with(
+                        MessageCode::Success,
+                        self.next_id,
+                        &[],
+                    )))
                 } else {
                     EapOutput::success(None)
                 }
@@ -362,7 +380,11 @@ impl<N: InnerLayer> EapLayer<N> {
         }
     }
 
-    fn send_message(&mut self, msg: MessageContent, _env: &mut dyn EapEnvironment) -> EapOutput {
+    fn send_message<'a>(
+        &mut self,
+        msg: MessageContent,
+        env: &'a mut dyn EapEnvironment,
+    ) -> EapOutput<'a> {
         let code = if self.next_layer.is_auth() {
             MessageCode::Request
         } else {
@@ -372,11 +394,11 @@ impl<N: InnerLayer> EapLayer<N> {
         let identifier = self.next_id;
         self.next_id = self.next_id.wrapping_add(1);
 
-        let message = Message::new(code, identifier, &msg.data);
+        let message = env.respond_with(code, identifier, &msg.data);
+
         self.state = State::MessagePending {
             expected_id: identifier,
             retransmission_count: 0,
-            last_message: message.clone(),
         };
 
         EapOutput::send(message)
@@ -442,13 +464,12 @@ mod tests {
         // ignore message id
         if let Some(msg) = &expected.message {
             if let Some(out_msg) = &output.message {
-                assert_eq!(msg.code, out_msg.code);
-                assert_eq!(msg.data, out_msg.data);
+                assert_eq!(msg.slice(), out_msg.slice())
             } else {
                 panic!("Expected message but got None");
             }
         } else {
-            assert_eq!(output.message, None);
+            assert!(output.message.is_none());
         }
     }
 
@@ -456,6 +477,7 @@ mod tests {
     /// Test simple dialog
     fn dialog_peer() {
         let mut env = DefaultEnvironment::new();
+
         let mut layer = EapLayer::new(DummyInnerLayer::new(false));
 
         assert_output(
@@ -472,7 +494,7 @@ mod tests {
                 &mut env,
             ),
             EapOutput {
-                message: Some(Message::new(MessageCode::Response, 42, &[23, 1])),
+                message: Some(Message::new(MessageCode::Response, 42, &[23, 1]).into()),
                 status: EapStatus::Ok,
             },
         );
@@ -547,7 +569,7 @@ mod tests {
             assert_output(
                 layer.receive(&peer_msg, &mut env),
                 EapOutput {
-                    message: Some(Message::new(MessageCode::Response, 0, &[0, 1])),
+                    message: Some(Message::new(MessageCode::Response, 0, &[0, 1]).into()),
                     status: EapStatus::Ok,
                 },
             );
@@ -564,10 +586,12 @@ mod tests {
 
         let mut layer = EapLayer::new(DummyInnerLayer::new(true));
 
+        layer.next_id = 0;
+
         assert_output(
             layer.start(&mut env),
             EapOutput {
-                message: Some(Message::new(MessageCode::Request, 0, &[0, 0])),
+                message: Some(Message::new(MessageCode::Request, 0, &[0, 0]).into()),
                 status: EapStatus::Ok,
             },
         );
@@ -576,7 +600,7 @@ mod tests {
             assert_output(
                 layer.timeout(&mut env),
                 EapOutput {
-                    message: Some(Message::new(MessageCode::Request, 0, &[0, 0])),
+                    message: Some(Message::new(MessageCode::Request, 0, &[0, 0]).into()),
                     status: EapStatus::Ok,
                 },
             );
@@ -585,7 +609,7 @@ mod tests {
         assert_output(
             layer.timeout(&mut env),
             EapOutput {
-                message: Some(Message::new(MessageCode::Failure, 0, &[])),
+                message: Some(Message::new(MessageCode::Failure, 1, &[]).into()),
                 status: EapStatus::Failed(StateError::Timeout),
             },
         );

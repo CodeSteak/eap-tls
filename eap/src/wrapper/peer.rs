@@ -102,7 +102,7 @@ where
                 EapStatus::Failed(_) => PeerStepStatus::Error,
                 EapStatus::InternalError => PeerStepStatus::Error,
             },
-            response: res.message.map(|m| m.to_bytes()),
+            response: res.message.map(|m| m.slice().to_vec()),
         }
     }
 }

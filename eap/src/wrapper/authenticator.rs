@@ -95,7 +95,7 @@ where
                 layers::eap_layer::EapStatus::Failed(_) => AuthenticatorStepStatus::Error,
                 layers::eap_layer::EapStatus::InternalError => AuthenticatorStepStatus::Error,
             },
-            response: res.message.map(|m| m.to_bytes()),
+            response: res.message.map(|m| m.slice().to_vec()),
         }
     }
 }
