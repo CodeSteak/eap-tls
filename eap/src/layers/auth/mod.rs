@@ -1,5 +1,5 @@
 mod auth_layer;
-pub use auth_layer::{AuthInnerLayer, AuthLayer};
+pub use auth_layer::{AuthLayer, AuthMethodLayer};
 
 mod identity;
 mod md5_challange;

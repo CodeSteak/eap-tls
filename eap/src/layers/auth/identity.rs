@@ -1,7 +1,7 @@
-use crate::{layers::mux::HasId, message::MessageContent, EapEnvironment};
+use crate::{layers::mux::HasId, message::MessageContent, EapEnvironment, EapEnvironmentResponse};
 
 use super::auth_layer::{
-    AuthInnerLayer as ThisLayer, AuthInnerLayerResult as ThisLayerResult, RecvMeta,
+    AuthMethodLayer as ThisLayer, AuthMethodLayerResult as ThisLayerResult, RecvMeta,
 };
 
 const METHOD_IDENTITY: u8 = 1;
@@ -36,18 +36,18 @@ impl ThisLayer for AuthIdentityMethod {
         METHOD_IDENTITY
     }
 
-    fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
-        ThisLayerResult::Send(MessageContent { data: vec![] })
+    fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> ThisLayerResult<'a> {
+        ThisLayerResult::Send(env.respond().write(&[]))
     }
 
-    fn recv(
+    fn recv<'a>(
         &mut self,
         msg: &[u8],
         _meta: &RecvMeta,
-        env: &mut dyn EapEnvironment,
-    ) -> ThisLayerResult {
+        env: &'a mut dyn EapEnvironment,
+    ) -> ThisLayerResult<'a> {
         env.set_name(msg);
-        ThisLayerResult::NextLayer
+        ThisLayerResult::NextLayer(env)
     }
 
     fn selectable_by_nak(&self) -> bool {
@@ -66,16 +66,17 @@ mod tests {
         let mut env = crate::DefaultEnvironment::new();
         let mut method = AuthIdentityMethod::new();
         assert_eq!(method.method_identifier(), METHOD_IDENTITY);
-        assert_eq!(
+
+        assert!(matches!(
             method.start(&mut env),
-            ThisLayerResult::Send(MessageContent { data: vec![] })
-        );
+            ThisLayerResult::Send(content) if content.slice().is_empty()
+        ));
 
         let m = Message::new(crate::message::MessageCode::Response, 0, b"bob");
-        assert_eq!(
+        assert!(matches!(
             method.recv(b"bob", &RecvMeta { message: &m }, &mut env),
-            ThisLayerResult::NextLayer
-        );
+            ThisLayerResult::NextLayer(_)
+        ));
 
         assert_eq!(env.name(), Some(&b"bob"[..]));
     }

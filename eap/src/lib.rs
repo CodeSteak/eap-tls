@@ -294,7 +294,7 @@ mod tests {
         let mut env = DefaultEnvironment::new();
         let env: &mut dyn EapEnvironment = &mut env;
 
-        let mut builder = env.respond().write(&[5, 6, 7, 8]).prepend(&[0]);
+        let builder = env.respond().write(&[5, 6, 7, 8]).prepend(&[0]);
         let message = builder.build(MessageCode::Request, 0);
 
         assert_eq!(message.slice(), &[1, 0, 0, 9, 0, 5, 6, 7, 8]);

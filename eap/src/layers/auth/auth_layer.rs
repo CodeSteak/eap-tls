@@ -3,7 +3,7 @@ use std::vec;
 use crate::{
     layers::mux::{HasId, TupleAppend, TupleById},
     message::{Message, MessageCode, MessageContent},
-    EapEnvironment, EapEnvironmentResponse,
+    EapEnvironment, EapEnvironmentResponse, MessageBuilder,
 };
 
 use crate::layers::eap_layer::{
@@ -23,31 +23,30 @@ pub struct RecvMeta<'a> {
     pub message: &'a Message,
 }
 
-pub trait AuthInnerLayer {
+pub trait AuthMethodLayer {
     fn method_identifier(&self) -> u8;
-    fn start(&mut self, env: &mut dyn EapEnvironment) -> AuthInnerLayerResult;
-    fn recv(
+    fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> AuthMethodLayerResult<'a>;
+    fn recv<'a>(
         &mut self,
         msg: &[u8],
         meta: &RecvMeta,
-        env: &mut dyn EapEnvironment,
-    ) -> AuthInnerLayerResult;
+        env: &'a mut dyn EapEnvironment,
+    ) -> AuthMethodLayerResult<'a>;
     fn selectable_by_nak(&self) -> bool {
         true
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AuthInnerLayerResult {
-    Send(MessageContent),
-    Finished,
-    Failed,
-    NextLayer,
+pub enum AuthMethodLayerResult<'a> {
+    Send(MessageBuilder<'a>),
+    Finished(&'a mut dyn EapEnvironment),
+    Failed(&'a mut dyn EapEnvironment),
+    NextLayer(&'a mut dyn EapEnvironment),
 }
 
 impl<I> ThisLayer for AuthLayer<I>
 where
-    I: TupleById<dyn AuthInnerLayer>,
+    I: TupleById<dyn AuthMethodLayer>,
 {
     fn is_peer(&self) -> bool {
         false
@@ -55,7 +54,7 @@ where
 
     fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> ThisLayerResult<'a> {
         let res = self.current_layer().start(env);
-        self.process_result(res, env)
+        self.process_result(res)
     }
 
     fn recv<'a>(&mut self, msg: &Message, env: &'a mut dyn EapEnvironment) -> ThisLayerResult<'a> {
@@ -83,7 +82,7 @@ where
                     self.next_layer = candidate.method_identifier();
 
                     let res = self.current_layer().start(env);
-                    return self.process_result(res, env);
+                    return self.process_result(res);
                 }
             }
 
@@ -98,7 +97,7 @@ where
             .current_layer()
             .recv(&msg.data[1..], &RecvMeta { message: msg }, env);
 
-        self.process_result(res, env)
+        self.process_result(res)
     }
 
     fn can_succeed(&mut self) -> bool {
@@ -121,7 +120,7 @@ impl<I> AuthLayer<I> {
     pub fn with<P>(self, candidate: P) -> AuthLayer<<I as TupleAppend<P>>::Output>
     where
         I: TupleAppend<P>,
-        P: HasId<Target = dyn AuthInnerLayer>,
+        P: HasId<Target = dyn AuthMethodLayer>,
     {
         AuthLayer {
             peer_has_sent_nak: false,
@@ -137,7 +136,7 @@ impl<I> AuthLayer<I> {
 
 impl<I> AuthLayer<I>
 where
-    I: TupleById<dyn AuthInnerLayer>,
+    I: TupleById<dyn AuthMethodLayer>,
 {
     #[allow(unused)]
     pub fn from_layers(candidates: I) -> Self {
@@ -149,25 +148,24 @@ where
         }
     }
 
-    fn current_layer(&mut self) -> &mut dyn AuthInnerLayer {
+    fn current_layer(&mut self) -> &mut dyn AuthMethodLayer {
         // this is ensured by construction, see `new`
         self.candidates.get_by_id_mut(self.next_layer).unwrap()
     }
 
     fn process_result<'a>(
-        &mut self,
-        res: AuthInnerLayerResult,
-        env: &'a mut dyn EapEnvironment,
+        &mut self, //
+        res: AuthMethodLayerResult<'a>,
     ) -> ThisLayerResult<'a> {
         match res {
-            AuthInnerLayerResult::Send(msg) => {
+            AuthMethodLayerResult::Send(msg) => {
                 let id = self.next_layer;
 
-                ThisLayerResult::Send(env.respond().write(&msg.data).prepend(&[id]))
+                ThisLayerResult::Send(msg.prepend(&[id]))
             }
-            AuthInnerLayerResult::Finished => ThisLayerResult::Finished(env),
-            AuthInnerLayerResult::Failed => ThisLayerResult::Failed(env),
-            AuthInnerLayerResult::NextLayer => {
+            AuthMethodLayerResult::Finished(env) => ThisLayerResult::Finished(env),
+            AuthMethodLayerResult::Failed(env) => ThisLayerResult::Failed(env),
+            AuthMethodLayerResult::NextLayer(env) => {
                 let current_idx = self.candidates.id_to_idx(self.next_layer).unwrap();
                 self.next_layer = self
                     .candidates
@@ -177,7 +175,7 @@ where
 
                 if self.candidates.len() > 1 {
                     let res = self.current_layer().start(env);
-                    self.process_result(res, env)
+                    self.process_result(res)
                 } else {
                     ThisLayerResult::Failed(env) // <- Internal Issue
                 }
@@ -201,13 +199,21 @@ mod tests {
     use super::*;
 
     #[derive(Debug, Clone, PartialEq, Eq)]
+    enum DummyEvent {
+        Send(Vec<u8>),
+        Finished,
+        Failed,
+        NextLayer,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq)]
     struct DummyProtocol {
         method_identifier: u8,
-        events: Vec<AuthInnerLayerResult>,
+        events: Vec<DummyEvent>,
     }
 
     impl DummyProtocol {
-        fn new(method_identifier: u8, events: &[AuthInnerLayerResult]) -> Self {
+        fn new(method_identifier: u8, events: &[DummyEvent]) -> Self {
             DummyProtocol {
                 method_identifier,
                 events: events.to_vec(),
@@ -216,7 +222,7 @@ mod tests {
     }
 
     impl HasId for DummyProtocol {
-        type Target = dyn AuthInnerLayer;
+        type Target = dyn AuthMethodLayer;
 
         fn id(&self) -> u8 {
             self.method_identifier
@@ -231,22 +237,27 @@ mod tests {
         }
     }
 
-    impl AuthInnerLayer for DummyProtocol {
+    impl AuthMethodLayer for DummyProtocol {
         fn method_identifier(&self) -> u8 {
             self.method_identifier
         }
 
-        fn start(&mut self, _env: &mut dyn EapEnvironment) -> AuthInnerLayerResult {
-            self.events.remove(0)
+        fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> AuthMethodLayerResult<'a> {
+            match self.events.remove(0) {
+                DummyEvent::Send(data) => AuthMethodLayerResult::Send(env.respond().write(&data)),
+                DummyEvent::Finished => AuthMethodLayerResult::Finished(env),
+                DummyEvent::Failed => AuthMethodLayerResult::Failed(env),
+                DummyEvent::NextLayer => AuthMethodLayerResult::NextLayer(env),
+            }
         }
 
-        fn recv(
+        fn recv<'a>(
             &mut self,
             _msg: &[u8],
             _meta: &RecvMeta,
-            _env: &mut dyn EapEnvironment,
-        ) -> AuthInnerLayerResult {
-            self.events.remove(0)
+            env: &'a mut dyn EapEnvironment,
+        ) -> AuthMethodLayerResult<'a> {
+            self.start(env)
         }
     }
 
@@ -265,36 +276,22 @@ mod tests {
             DummyProtocol::new(
                 1,
                 &[
-                    AuthInnerLayerResult::Send(MessageContent {
-                        data: b"username?".to_vec(),
-                    }),
-                    AuthInnerLayerResult::NextLayer,
+                    DummyEvent::Send(b"username?".to_vec()),
+                    DummyEvent::NextLayer,
                 ],
             ),
             DummyProtocol::new(
                 2,
                 &[
-                    AuthInnerLayerResult::Send(MessageContent {
-                        data: b"unsupported".to_vec(),
-                    }),
-                    AuthInnerLayerResult::Failed,
+                    DummyEvent::Send(b"unsupported".to_vec()),
+                    DummyEvent::Failed,
                 ],
             ),
             DummyProtocol::new(
                 4,
-                &[
-                    AuthInnerLayerResult::Send(MessageContent {
-                        data: b"right".to_vec(),
-                    }),
-                    AuthInnerLayerResult::Finished,
-                ],
+                &[DummyEvent::Send(b"right".to_vec()), DummyEvent::Finished],
             ),
-            DummyProtocol::new(
-                5,
-                &[AuthInnerLayerResult::Send(MessageContent {
-                    data: b"don't select me".to_vec(),
-                })],
-            ),
+            DummyProtocol::new(5, &[DummyEvent::Send(b"don't select me".to_vec())]),
         ));
 
         //  Auth inits conversation

@@ -35,13 +35,15 @@ impl<C, T> CommonTLS<C>
 where
     C: DerefMut<Target = ConnectionCommon<T>>,
 {
-    pub fn start_packet(&self) -> Vec<u8> {
-        vec![Header {
+    pub fn start_packet(&self) -> &'static [u8] {
+        const START_PACKET: u8 = Header {
             length_included: false,
             more_fragments: false,
             start: true,
         }
-        .write()]
+        .write();
+
+        &[START_PACKET]
     }
 
     pub fn process(&mut self, msg: &[u8], return_on_finish: bool) -> Result<EapCommonResult, ()> {
@@ -184,7 +186,7 @@ struct Header {
 }
 
 impl Header {
-    fn write(&self) -> u8 {
+    const fn write(&self) -> u8 {
         let mut result = 0;
         if self.length_included {
             result |= HEADER_FIELD_LEN;

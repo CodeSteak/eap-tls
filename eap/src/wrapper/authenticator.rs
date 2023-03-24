@@ -1,7 +1,7 @@
 use crate::{
     layers::{
         self,
-        auth::{AuthIdentityMethod, AuthInnerLayer, AuthMD5ChallengeMethod},
+        auth::{AuthIdentityMethod, AuthMD5ChallengeMethod, AuthMethodLayer},
         mux::TupleById,
         AuthLayer, EapLayer,
     },
@@ -58,7 +58,7 @@ impl Authenticator<(AuthIdentityMethod, crate::layers::auth::AuthTlsMethod)> {
 
 impl<I> Authenticator<I>
 where
-    I: TupleById<dyn AuthInnerLayer>,
+    I: TupleById<dyn AuthMethodLayer>,
 {
     pub fn receive(&mut self, data: &[u8]) {
         self.buffer = data.to_vec();

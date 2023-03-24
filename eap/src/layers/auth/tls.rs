@@ -1,6 +1,7 @@
 use crate::{
     eap_tls::{CommonTLS, EapCommonResult},
     layers::mux::HasId,
+    EapEnvironmentResponse,
 };
 use std::sync::Arc;
 
@@ -12,7 +13,7 @@ use rustls::{
 use crate::{message::MessageContent, EapEnvironment};
 
 use super::auth_layer::{
-    AuthInnerLayer as ThisLayer, AuthInnerLayerResult as ThisLayerResult, RecvMeta,
+    AuthMethodLayer as ThisLayer, AuthMethodLayerResult as ThisLayerResult, RecvMeta,
 };
 
 const METHOD_TLS: u8 = 13;
@@ -107,30 +108,28 @@ impl ThisLayer for AuthTlsMethod {
         METHOD_TLS
     }
 
-    fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
+    fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> ThisLayerResult<'a> {
         let inner = self
             .inner
             .get_or_insert_with(|| AuthTlsMethod::create_common_tls(&self.config));
 
-        ThisLayerResult::Send(MessageContent {
-            data: inner.start_packet(),
-        })
+        ThisLayerResult::Send(env.respond().write(inner.start_packet()))
     }
 
-    fn recv(
+    fn recv<'a>(
         &mut self,
         msg: &[u8],
         _meta: &RecvMeta,
-        _env: &mut dyn EapEnvironment,
-    ) -> ThisLayerResult {
+        env: &'a mut dyn EapEnvironment,
+    ) -> ThisLayerResult<'a> {
         let inner = self
             .inner
             .get_or_insert_with(|| AuthTlsMethod::create_common_tls(&self.config));
 
         match inner.process(msg, true) {
-            Ok(EapCommonResult::Finished) => ThisLayerResult::Finished,
-            Ok(EapCommonResult::Next(data)) => ThisLayerResult::Send(MessageContent { data }),
-            Err(()) => ThisLayerResult::Failed,
+            Ok(EapCommonResult::Finished) => ThisLayerResult::Finished(env),
+            Ok(EapCommonResult::Next(data)) => ThisLayerResult::Send(env.respond().write(&data)),
+            Err(()) => ThisLayerResult::Failed(env),
         }
     }
 
