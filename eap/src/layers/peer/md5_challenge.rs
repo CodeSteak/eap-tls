@@ -1,6 +1,6 @@
 use crate::layers::mux::HasId;
 
-use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};
+use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 
 #[derive(Clone)]
 pub struct PeerMD5ChallengeMethod {
@@ -17,7 +17,7 @@ impl PeerMD5ChallengeMethod {
 }
 
 impl HasId for PeerMD5ChallengeMethod {
-    type Target = dyn PeerInnerLayer;
+    type Target = dyn PeerMethodLayer;
     fn id(&self) -> u8 {
         self.method_identifier()
     }
@@ -31,7 +31,7 @@ impl HasId for PeerMD5ChallengeMethod {
     }
 }
 
-impl PeerInnerLayer for PeerMD5ChallengeMethod {
+impl PeerMethodLayer for PeerMD5ChallengeMethod {
     fn method_identifier(&self) -> u8 {
         4
     }
@@ -41,11 +41,11 @@ impl PeerInnerLayer for PeerMD5ChallengeMethod {
         msg: &[u8],
         meta: &RecvMeta,
         _env: &mut dyn crate::EapEnvironment,
-    ) -> PeerInnerLayerResult {
+    ) -> PeerMethodLayerResult {
         // first byte is length of the challenge part,
         // but the content is vague and does not matter
         if msg.len() != 17 {
-            return PeerInnerLayerResult::Failed;
+            return PeerMethodLayerResult::Failed;
         }
 
         let mut hashed_data = Vec::new();
@@ -59,7 +59,7 @@ impl PeerInnerLayer for PeerMD5ChallengeMethod {
         response[0] = hash.len() as u8; // fixed length
         response[1..].copy_from_slice(&hash);
 
-        PeerInnerLayerResult::Send(crate::message::MessageContent { data: response })
+        PeerMethodLayerResult::Send(crate::message::MessageContent { data: response })
     }
 }
 
@@ -85,7 +85,7 @@ mod tests {
 
         assert_eq!(
             result,
-            PeerInnerLayerResult::Send(crate::message::MessageContent {
+            PeerMethodLayerResult::Send(crate::message::MessageContent {
                 data: crate::util::hex_to_vec("10 09 39 72 8a 8f 7f 82 f5 11 61 0c ff df 8b c3 1f"),
             })
         );
@@ -104,6 +104,6 @@ mod tests {
         );
 
         let result = method.recv(&m.data, &RecvMeta { message: &m }, &mut env);
-        assert_eq!(result, PeerInnerLayerResult::Failed);
+        assert_eq!(result, PeerMethodLayerResult::Failed);
     }
 }

@@ -3,10 +3,12 @@ use std::vec;
 use crate::{
     layers::mux::{HasId, TupleAppend, TupleById},
     message::{Message, MessageCode, MessageContent},
-    EapEnvironment,
+    EapEnvironment, EapEnvironmentResponse,
 };
 
-use crate::layers::eap_layer::{InnerLayer as ThisLayer, InnerLayerOutput as ThisLayerResult};
+use crate::layers::eap_layer::{
+    PeerAuthLayer as ThisLayer, PeerAuthLayerResult as ThisLayerResult,
+};
 
 #[derive(Clone)]
 pub struct AuthLayer<I> {
@@ -51,26 +53,26 @@ where
         false
     }
 
-    fn start(&mut self, env: &mut dyn EapEnvironment) -> ThisLayerResult {
+    fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> ThisLayerResult<'a> {
         let res = self.current_layer().start(env);
         self.process_result(res, env)
     }
 
-    fn recv(&mut self, msg: &Message, env: &mut dyn EapEnvironment) -> ThisLayerResult {
+    fn recv<'a>(&mut self, msg: &Message, env: &'a mut dyn EapEnvironment) -> ThisLayerResult<'a> {
         if msg.code != MessageCode::Response {
-            return ThisLayerResult::Failed;
+            return ThisLayerResult::Failed(env);
         }
 
         if msg.data.is_empty() {
             // Message Too Short
-            return ThisLayerResult::Failed;
+            return ThisLayerResult::Failed(env);
         }
 
         let method_identifier = msg.data[0];
         if method_identifier == METHOD_CLIENT_PROPOSAL {
             if self.peer_has_sent_nak {
                 // Protocol Violation
-                return ThisLayerResult::Failed;
+                return ThisLayerResult::Failed(env);
             }
             self.peer_has_sent_nak = true;
 
@@ -85,11 +87,11 @@ where
                 }
             }
 
-            return ThisLayerResult::Failed; // <- no matching method
+            return ThisLayerResult::Failed(env); // <- no matching method
         }
 
         if method_identifier != self.next_layer {
-            return ThisLayerResult::Failed;
+            return ThisLayerResult::Failed(env);
         }
 
         let res = self
@@ -152,19 +154,19 @@ where
         self.candidates.get_by_id_mut(self.next_layer).unwrap()
     }
 
-    fn process_result(
+    fn process_result<'a>(
         &mut self,
         res: AuthInnerLayerResult,
-        env: &mut dyn EapEnvironment,
-    ) -> ThisLayerResult {
+        env: &'a mut dyn EapEnvironment,
+    ) -> ThisLayerResult<'a> {
         match res {
             AuthInnerLayerResult::Send(msg) => {
                 let id = self.next_layer;
-                let data = add_message_identifier_to_data(id, msg.data);
-                ThisLayerResult::Send(MessageContent { data })
+
+                ThisLayerResult::Send(env.respond().write(&msg.data).prepend(&[id]))
             }
-            AuthInnerLayerResult::Finished => ThisLayerResult::Finished,
-            AuthInnerLayerResult::Failed => ThisLayerResult::Failed,
+            AuthInnerLayerResult::Finished => ThisLayerResult::Finished(env),
+            AuthInnerLayerResult::Failed => ThisLayerResult::Failed(env),
             AuthInnerLayerResult::NextLayer => {
                 let current_idx = self.candidates.id_to_idx(self.next_layer).unwrap();
                 self.next_layer = self
@@ -177,7 +179,7 @@ where
                     let res = self.current_layer().start(env);
                     self.process_result(res, env)
                 } else {
-                    ThisLayerResult::Failed // <- Internal Issue
+                    ThisLayerResult::Failed(env) // <- Internal Issue
                 }
             }
         }
@@ -194,7 +196,7 @@ fn add_message_identifier_to_data(id: u8, data: Vec<u8>) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
 
-    use crate::DefaultEnvironment;
+    use crate::{DefaultEnvironment, MessageBuilder};
 
     use super::*;
 
@@ -258,6 +260,7 @@ mod tests {
     #[test]
     fn auth_layer_error_and_normal() {
         let mut env = DefaultEnvironment::new();
+
         let mut layer = AuthLayer::from_layers((
             DummyProtocol::new(
                 1,
@@ -297,9 +300,7 @@ mod tests {
         //  Auth inits conversation
         assert_eq!(
             layer.start(&mut env),
-            ThisLayerResult::Send(MessageContent {
-                data: b"\x01username?".to_vec()
-            }),
+            ThisLayerResult::Send(MessageBuilder::from(b"\x01username?".as_slice()))
         );
 
         {
@@ -311,7 +312,7 @@ mod tests {
                     &Message::new(MessageCode::Response, 0, b"\x04wrong method"),
                     &mut env,
                 ),
-                ThisLayerResult::Failed,
+                ThisLayerResult::Failed(&mut DefaultEnvironment::new()),
             );
         }
 
@@ -321,9 +322,7 @@ mod tests {
                 &Message::new(MessageCode::Response, 0, b"\x01bob"),
                 &mut env,
             ),
-            ThisLayerResult::Send(MessageContent {
-                data: b"\x02unsupported".to_vec()
-            }),
+            ThisLayerResult::Send(MessageBuilder::from(b"\x02unsupported".as_slice())),
         );
 
         {
@@ -335,7 +334,7 @@ mod tests {
                     &Message::new(MessageCode::Response, 0, b"\x03\x07"),
                     &mut env,
                 ),
-                ThisLayerResult::Failed,
+                ThisLayerResult::Failed(&mut DefaultEnvironment::new()),
             );
         }
 
@@ -346,9 +345,7 @@ mod tests {
                 &mut env,
             ),
             // We configured 4
-            ThisLayerResult::Send(MessageContent {
-                data: b"\x04right".to_vec()
-            }),
+            ThisLayerResult::Send(MessageBuilder::from(b"\x04right".as_slice())),
         );
 
         {
@@ -360,14 +357,14 @@ mod tests {
                     &Message::new(MessageCode::Response, 0, b"\x03\x04"),
                     &mut env,
                 ),
-                ThisLayerResult::Failed,
+                ThisLayerResult::Failed(&mut DefaultEnvironment::new()),
             );
         }
 
         // Peer responds
         assert_eq!(
             layer.recv(&Message::new(MessageCode::Response, 0, b"\x04"), &mut env,),
-            ThisLayerResult::Finished,
+            ThisLayerResult::Finished(&mut DefaultEnvironment::new()),
         );
     }
 }

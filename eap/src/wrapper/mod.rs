@@ -8,7 +8,7 @@ pub use peer::*;
 mod tests {
     use rand::{rngs::StdRng, Rng, SeedableRng};
 
-    use crate::layers::{auth::AuthInnerLayer, mux::TupleById, peer::peer_layer::PeerInnerLayer};
+    use crate::layers::{auth::AuthInnerLayer, mux::TupleById, peer::peer_layer::PeerMethodLayer};
 
     use super::*;
 
@@ -18,7 +18,7 @@ mod tests {
         package_drop_rate: Option<(f32, u64)>,
     ) -> (PeerStepStatus, AuthenticatorStepStatus)
     where
-        I: TupleById<dyn PeerInnerLayer>,
+        I: TupleById<dyn PeerMethodLayer>,
         O: TupleById<dyn AuthInnerLayer>,
     {
         let (package_drop_rate, seed) = package_drop_rate.unwrap_or((0.0, 0));

@@ -9,7 +9,7 @@ use crate::{
     message::MessageContent,
 };
 
-use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};
+use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 
 pub struct PeerTlsMethod {
     config: TlsConfig,
@@ -17,7 +17,7 @@ pub struct PeerTlsMethod {
 }
 
 impl HasId for PeerTlsMethod {
-    type Target = dyn PeerInnerLayer;
+    type Target = dyn PeerMethodLayer;
     fn id(&self) -> u8 {
         self.method_identifier()
     }
@@ -100,7 +100,7 @@ impl Clone for PeerTlsMethod {
     }
 }
 
-impl PeerInnerLayer for PeerTlsMethod {
+impl PeerMethodLayer for PeerTlsMethod {
     fn method_identifier(&self) -> u8 {
         METHOD_TLS
     }
@@ -110,7 +110,7 @@ impl PeerInnerLayer for PeerTlsMethod {
         msg: &[u8],
         _meta: &RecvMeta,
         _env: &mut dyn crate::EapEnvironment,
-    ) -> PeerInnerLayerResult {
+    ) -> PeerMethodLayerResult {
         let inner = self
             .inner
             .get_or_insert_with(|| PeerTlsMethod::create_common_tls(&self.config));
@@ -120,9 +120,9 @@ impl PeerInnerLayer for PeerTlsMethod {
                 unreachable!();
             }
             Ok(EapCommonResult::Next(data)) => {
-                PeerInnerLayerResult::Send(MessageContent::new(&data))
+                PeerMethodLayerResult::Send(MessageContent::new(&data))
             }
-            Err(()) => PeerInnerLayerResult::Failed,
+            Err(()) => PeerMethodLayerResult::Failed,
         }
     }
 

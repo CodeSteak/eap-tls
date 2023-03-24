@@ -1,10 +1,10 @@
 use crate::{
     layers::mux::{HasId, TupleAppend, TupleById},
     message::{Message, MessageContent},
-    EapEnvironment,
+    EapEnvironment, EapEnvironmentResponse,
 };
 
-use crate::layers::eap_layer::{InnerLayer as ThisLayer, InnerLayerOutput as ThisLayerResult};
+use crate::layers::eap_layer::{PeerAuthLayer, PeerAuthLayerResult};
 
 //////
 ///
@@ -31,7 +31,7 @@ impl<I> PeerLayer<I> {
     pub fn with<P>(self, candidate: P) -> PeerLayer<<I as TupleAppend<P>>::Output>
     where
         I: TupleAppend<P>,
-        P: HasId<Target = dyn PeerInnerLayer>,
+        P: HasId<Target = dyn PeerMethodLayer>,
     {
         PeerLayer {
             next_layer: None,
@@ -44,7 +44,7 @@ pub struct RecvMeta<'a> {
     pub message: &'a Message,
 }
 
-pub trait PeerInnerLayer {
+pub trait PeerMethodLayer {
     /* */
     fn method_identifier(&self) -> u8;
     fn recv(
@@ -52,7 +52,7 @@ pub trait PeerInnerLayer {
         msg: &[u8],
         meta: &RecvMeta,
         env: &mut dyn EapEnvironment,
-    ) -> PeerInnerLayerResult;
+    ) -> PeerMethodLayerResult;
 
     fn selectable_by_nak(&self) -> bool {
         true
@@ -68,15 +68,15 @@ pub trait PeerInnerLayer {
 pub const METHOD_CLIENT_PROPOSAL: u8 = 3;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PeerInnerLayerResult {
+pub enum PeerMethodLayerResult {
     Noop,
     Send(MessageContent),
     Failed,
 }
 
-impl<I> ThisLayer for PeerLayer<I>
+impl<I> PeerAuthLayer for PeerLayer<I>
 where
-    I: TupleById<dyn PeerInnerLayer>,
+    I: TupleById<dyn PeerMethodLayer>,
 {
     fn is_peer(&self) -> bool {
         true
@@ -92,15 +92,19 @@ where
         true
     }
 
-    fn start(&mut self, _env: &mut dyn EapEnvironment) -> ThisLayerResult {
+    fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> PeerAuthLayerResult<'a> {
         // NOP, Authenticator will send a Request
-        ThisLayerResult::Noop
+        PeerAuthLayerResult::Noop(env)
     }
 
-    fn recv(&mut self, msg: &Message, env: &mut dyn EapEnvironment) -> ThisLayerResult {
+    fn recv<'a>(
+        &mut self,
+        msg: &Message,
+        env: &'a mut dyn EapEnvironment,
+    ) -> PeerAuthLayerResult<'a> {
         if msg.data.is_empty() {
             // Message Too Short
-            return ThisLayerResult::Failed;
+            return PeerAuthLayerResult::Failed(env);
         }
 
         let method_identifier = msg.data[0];
@@ -121,7 +125,7 @@ where
                         }
                     }
 
-                    ThisLayerResult::Send(MessageContent { data })
+                    PeerAuthLayerResult::Send(env.respond().write(&data))
                 }
             }
         } else {
@@ -141,51 +145,49 @@ where
         !self.is_peer()
     }
 
-    fn step(
+    fn step<'a>(
         &mut self,
-        input: crate::layers::eap_layer::InnerLayerInput,
-        env: &mut dyn EapEnvironment,
-    ) -> ThisLayerResult {
+        input: crate::layers::eap_layer::PeerAuthLayerInput,
+        env: &'a mut dyn EapEnvironment,
+    ) -> PeerAuthLayerResult<'a> {
         match input {
-            crate::layers::eap_layer::InnerLayerInput::Start => self.start(env),
-            crate::layers::eap_layer::InnerLayerInput::Recv(msg) => self.recv(&msg, env),
+            crate::layers::eap_layer::PeerAuthLayerInput::Start => self.start(env),
+            crate::layers::eap_layer::PeerAuthLayerInput::Recv(msg) => self.recv(&msg, env),
         }
     }
 }
 
 impl<I> PeerLayer<I> {
-    fn process_result(
+    fn process_result<'a>(
         &mut self,
-        res: PeerInnerLayerResult,
-        _env: &mut dyn EapEnvironment,
-    ) -> ThisLayerResult {
+        res: PeerMethodLayerResult,
+        env: &'a mut dyn EapEnvironment,
+    ) -> PeerAuthLayerResult<'a> {
         match res {
-            PeerInnerLayerResult::Noop => ThisLayerResult::Noop,
-            PeerInnerLayerResult::Send(data) => {
-                let data = vec![self.next_layer.unwrap()]
-                    .into_iter()
-                    .chain(data.data.into_iter())
-                    .collect();
-                ThisLayerResult::Send(MessageContent { data })
-            }
-            PeerInnerLayerResult::Failed => ThisLayerResult::Failed,
+            PeerMethodLayerResult::Noop => PeerAuthLayerResult::Noop(env),
+            PeerMethodLayerResult::Send(data) => PeerAuthLayerResult::Send(
+                env.respond()
+                    .write(&data.data)
+                    .prepend(&[self.next_layer.unwrap()]),
+            ),
+            PeerMethodLayerResult::Failed => PeerAuthLayerResult::Failed(env),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{message::MessageCode, DefaultEnvironment};
+    use crate::{message::MessageCode, DefaultEnvironment, MessageBuilder};
 
     use super::*;
 
     #[derive(Debug, Clone, PartialEq, Eq)]
     struct DummyProtocol {
         method_identifier: u8,
-        events: Vec<PeerInnerLayerResult>,
+        events: Vec<PeerMethodLayerResult>,
     }
 
-    impl PeerInnerLayer for DummyProtocol {
+    impl PeerMethodLayer for DummyProtocol {
         fn method_identifier(&self) -> u8 {
             self.method_identifier
         }
@@ -195,7 +197,7 @@ mod tests {
             _msg: &[u8],
             _meta: &RecvMeta,
             _env: &mut dyn EapEnvironment,
-        ) -> PeerInnerLayerResult {
+        ) -> PeerMethodLayerResult {
             self.events.remove(0)
         }
 
@@ -205,7 +207,7 @@ mod tests {
     }
 
     impl HasId for DummyProtocol {
-        type Target = dyn PeerInnerLayer;
+        type Target = dyn PeerMethodLayer;
         fn id(&self) -> u8 {
             self.method_identifier()
         }
@@ -232,44 +234,44 @@ mod tests {
     #[test]
     fn conversation() {
         let mut env = DefaultEnvironment::new();
+
         let mut layer = PeerLayer::new()
             .with(DummyProtocol {
                 method_identifier: 1,
                 events: vec![
-                    PeerInnerLayerResult::Send(MessageContent {
+                    PeerMethodLayerResult::Send(MessageContent {
                         data: b"Bob".to_vec(),
                     }),
-                    PeerInnerLayerResult::Failed,
+                    PeerMethodLayerResult::Failed,
                 ],
             })
             .with(DummyProtocol {
                 method_identifier: 4,
-                events: vec![PeerInnerLayerResult::Send(MessageContent {
+                events: vec![PeerMethodLayerResult::Send(MessageContent {
                     data: b"Ok".to_vec(),
                 })],
             })
             .with(DummyProtocol {
                 method_identifier: 2,
-                events: vec![PeerInnerLayerResult::Failed],
+                events: vec![PeerMethodLayerResult::Failed],
             });
 
-        assert_eq!(layer.start(&mut env), ThisLayerResult::Noop);
+        assert_eq!(
+            layer.start(&mut env),
+            PeerAuthLayerResult::Noop(&mut DefaultEnvironment::new())
+        );
 
         // Send a Request
         assert_eq!(
             layer.recv(&Message::new(MessageCode::Request, 0, b"\x01"), &mut env),
-            ThisLayerResult::Send(MessageContent {
-                data: b"\x01Bob".to_vec()
-            })
+            PeerAuthLayerResult::Send(MessageBuilder::from(b"\x01Bob".as_slice()))
         );
 
         // Protocol 1 has finished,
         // request non existent protocol 6
         assert_eq!(
             layer.recv(&Message::new(MessageCode::Request, 0, b"\x06"), &mut env),
-            ThisLayerResult::Send(MessageContent {
-                data: b"\x03\x04\x02".to_vec()
-            })
+            PeerAuthLayerResult::Send(MessageBuilder::from(b"\x03\x04\x02".as_slice()))
         );
 
         // Alternative Reality
@@ -278,16 +280,14 @@ mod tests {
             // Request protocol 2
             assert_eq!(
                 layer.recv(&Message::new(MessageCode::Request, 0, b"\x02"), &mut env),
-                ThisLayerResult::Failed
+                PeerAuthLayerResult::Failed(&mut DefaultEnvironment::new())
             );
         }
 
         // Request protocol 3
         assert_eq!(
             layer.recv(&Message::new(MessageCode::Request, 0, b"\x04"), &mut env),
-            ThisLayerResult::Send(MessageContent {
-                data: b"\x04Ok".to_vec(),
-            })
+            PeerAuthLayerResult::Send(MessageBuilder::from(b"\x04Ok".as_slice()))
         );
     }
 }

@@ -4,7 +4,7 @@ use crate::{
     layers::{
         eap_layer::EapStatus,
         mux::TupleById,
-        peer::{peer_layer::PeerInnerLayer, PeerIdentityMethod, PeerMD5ChallengeMethod},
+        peer::{peer_layer::PeerMethodLayer, PeerIdentityMethod, PeerMD5ChallengeMethod},
         EapLayer, PeerLayer,
     },
     DefaultEnvironment,
@@ -65,7 +65,7 @@ impl Peer<(PeerIdentityMethod, crate::layers::peer::PeerTlsMethod)> {
 
 impl<I> Peer<I>
 where
-    I: TupleById<dyn PeerInnerLayer>,
+    I: TupleById<dyn PeerMethodLayer>,
 {
     pub fn receive(&mut self, data: &[u8]) {
         self.buffer = data.to_vec();
@@ -100,7 +100,7 @@ where
                 EapStatus::Ok => PeerStepStatus::Ok,
                 EapStatus::Success => PeerStepStatus::Finished,
                 EapStatus::Failed(_) => PeerStepStatus::Error,
-                EapStatus::InternalError => PeerStepStatus::Error,
+                EapStatus::InternalError(_) => PeerStepStatus::Error,
             },
             response: res.message.map(|m| m.slice().to_vec()),
         }

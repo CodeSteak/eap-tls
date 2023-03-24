@@ -1,6 +1,6 @@
 use crate::{layers::mux::HasId, message::MessageContent, EapEnvironment};
 
-use super::peer_layer::{PeerInnerLayer, PeerInnerLayerResult, RecvMeta};
+use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 
 #[derive(Clone)]
 pub struct PeerIdentityMethod {
@@ -17,7 +17,7 @@ impl PeerIdentityMethod {
 }
 
 impl HasId for PeerIdentityMethod {
-    type Target = dyn PeerInnerLayer;
+    type Target = dyn PeerMethodLayer;
     fn id(&self) -> u8 {
         self.method_identifier()
     }
@@ -31,7 +31,7 @@ impl HasId for PeerIdentityMethod {
     }
 }
 
-impl PeerInnerLayer for PeerIdentityMethod {
+impl PeerMethodLayer for PeerIdentityMethod {
     fn method_identifier(&self) -> u8 {
         1
     }
@@ -41,12 +41,12 @@ impl PeerInnerLayer for PeerIdentityMethod {
         msg: &[u8],
         _meta: &RecvMeta,
         _env: &mut dyn EapEnvironment,
-    ) -> PeerInnerLayerResult {
+    ) -> PeerMethodLayerResult {
         if msg != b"" {
-            return PeerInnerLayerResult::Failed;
+            return PeerMethodLayerResult::Failed;
         }
 
-        PeerInnerLayerResult::Send(MessageContent {
+        PeerMethodLayerResult::Send(MessageContent {
             data: self.name.clone(),
         })
     }
@@ -72,14 +72,14 @@ mod tests {
 
         assert_eq!(
             method.recv(b"", &RecvMeta { message: &m }, &mut env),
-            PeerInnerLayerResult::Send(MessageContent {
+            PeerMethodLayerResult::Send(MessageContent {
                 data: b"bob".to_vec()
             })
         );
 
         assert_eq!(
             method.recv(b"invalid data", &RecvMeta { message: &m }, &mut env),
-            PeerInnerLayerResult::Failed
+            PeerMethodLayerResult::Failed
         );
     }
 }

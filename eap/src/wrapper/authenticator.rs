@@ -93,7 +93,7 @@ where
                 layers::eap_layer::EapStatus::Ok => AuthenticatorStepStatus::Ok,
                 layers::eap_layer::EapStatus::Success => AuthenticatorStepStatus::Finished,
                 layers::eap_layer::EapStatus::Failed(_) => AuthenticatorStepStatus::Error,
-                layers::eap_layer::EapStatus::InternalError => AuthenticatorStepStatus::Error,
+                layers::eap_layer::EapStatus::InternalError(_) => AuthenticatorStepStatus::Error,
             },
             response: res.message.map(|m| m.slice().to_vec()),
         }
