@@ -49,7 +49,7 @@ impl PeerMethodLayer for PeerMD5ChallengeMethod {
         }
 
         let mut md5_context = md5::Context::new();
-        md5_context.consume(&[meta.message.identifier]);
+        md5_context.consume([meta.message.identifier]);
         md5_context.consume(&self.password);
         md5_context.consume(&msg[1..]);
 

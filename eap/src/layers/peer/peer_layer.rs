@@ -189,6 +189,7 @@ mod tests {
 
     #[derive(Clone)]
     enum DummyEvent {
+        #[allow(dead_code)]
         Noop,
         Send(Vec<u8>),
         Failed,

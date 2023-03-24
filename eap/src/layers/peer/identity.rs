@@ -1,4 +1,4 @@
-use crate::{layers::mux::HasId, message::MessageContent, EapEnvironment, EapEnvironmentResponse};
+use crate::{layers::mux::HasId, EapEnvironment, EapEnvironmentResponse};
 
 use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 

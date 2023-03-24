@@ -10,7 +10,7 @@ use rustls::{
     server::AllowAnyAuthenticatedClient, Certificate, PrivateKey, ServerConfig, ServerConnection,
 };
 
-use crate::{message::MessageContent, EapEnvironment};
+use crate::EapEnvironment;
 
 use super::auth_layer::{
     AuthMethodLayer as ThisLayer, AuthMethodLayerResult as ThisLayerResult, RecvMeta,

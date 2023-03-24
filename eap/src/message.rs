@@ -3,21 +3,6 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-#[deprecated]
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MessageContent {
-    pub data: Vec<u8>,
-}
-
-impl MessageContent {
-    #[allow(unused)]
-    pub fn new(data: &[u8]) -> Self {
-        Self {
-            data: data.to_vec(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Message {
     pub code: MessageCode,

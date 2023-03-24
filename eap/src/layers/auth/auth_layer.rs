@@ -1,9 +1,7 @@
-use std::vec;
-
 use crate::{
     layers::mux::{HasId, TupleAppend, TupleById},
-    message::{Message, MessageCode, MessageContent},
-    EapEnvironment, EapEnvironmentResponse, MessageBuilder,
+    message::{Message, MessageCode},
+    EapEnvironment, MessageBuilder,
 };
 
 use crate::layers::eap_layer::{
@@ -184,17 +182,10 @@ where
     }
 }
 
-fn add_message_identifier_to_data(id: u8, data: Vec<u8>) -> Vec<u8> {
-    let mut buf = vec![];
-    buf.extend_from_slice(&[id]);
-    buf.extend_from_slice(&data);
-    buf
-}
-
 #[cfg(test)]
 mod tests {
 
-    use crate::{DefaultEnvironment, MessageBuilder};
+    use crate::{DefaultEnvironment, EapEnvironmentResponse, MessageBuilder};
 
     use super::*;
 

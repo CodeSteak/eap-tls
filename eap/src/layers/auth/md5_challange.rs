@@ -1,6 +1,5 @@
 use crate::layers::auth::auth_layer::{AuthMethodLayer, AuthMethodLayerResult};
 use crate::layers::mux::HasId;
-use crate::message::MessageContent;
 use crate::{EapEnvironment, EapEnvironmentResponse};
 
 use super::auth_layer::RecvMeta;
@@ -74,9 +73,9 @@ impl AuthMethodLayer for AuthMD5ChallengeMethod {
         //     return AuthInnerLayerResult::Failed;
         // }
         let mut md5_context = md5::Context::new();
-        md5_context.consume(&[meta.message.identifier]);
+        md5_context.consume([meta.message.identifier]);
         md5_context.consume(&self.password);
-        md5_context.consume(&self.challange_data);
+        md5_context.consume(self.challange_data);
         md5_context.consume(&self.value);
         let expected = md5_context.compute().0;
 

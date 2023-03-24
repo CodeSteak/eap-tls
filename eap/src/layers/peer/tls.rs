@@ -6,7 +6,6 @@ use rustls::{Certificate, ClientConfig, ClientConnection, PrivateKey};
 use crate::{
     eap_tls::{CommonTLS, EapCommonResult},
     layers::mux::HasId,
-    message::MessageContent,
     EapEnvironmentResponse,
 };
 

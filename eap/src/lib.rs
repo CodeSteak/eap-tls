@@ -1,6 +1,6 @@
 mod wrapper;
 
-use message::{Message, MessageCode};
+use message::MessageCode;
 pub use wrapper::*;
 #[cfg(feature = "tls")]
 mod eap_tls;
@@ -230,8 +230,8 @@ impl<'a> ResponseMessage<'a> {
 }
 
 #[cfg(test)]
-impl From<Message> for ResponseMessage<'static> {
-    fn from(message: Message) -> Self {
+impl From<message::Message> for ResponseMessage<'static> {
+    fn from(message: message::Message) -> Self {
         let buffer = message.to_bytes();
         let length = buffer.len();
 
@@ -253,13 +253,19 @@ pub struct DefaultEnvironment {
     response_buffer_state: ResponseBufferState,
 }
 
-impl DefaultEnvironment {
-    pub fn new() -> Self {
+impl Default for DefaultEnvironment {
+    fn default() -> Self {
         Self {
             name: None,
             response_buffer: Box::new([0u8; 1024]),
             response_buffer_state: ResponseBufferState::default(),
         }
+    }
+}
+
+impl DefaultEnvironment {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

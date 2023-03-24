@@ -1,5 +1,5 @@
 use crate::{
-    message::{Message, MessageCode, MessageContent},
+    message::{Message, MessageCode},
     EapEnvironment, EapEnvironmentResponse, MessageBuilder, ResponseMessage,
 };
 
