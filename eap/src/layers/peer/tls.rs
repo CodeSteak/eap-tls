@@ -7,6 +7,7 @@ use crate::{
     eap_tls::{CommonTLS, EapCommonResult},
     layers::mux::HasId,
     message::MessageContent,
+    EapEnvironmentResponse,
 };
 
 use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
@@ -105,12 +106,12 @@ impl PeerMethodLayer for PeerTlsMethod {
         METHOD_TLS
     }
 
-    fn recv(
+    fn recv<'a>(
         &mut self,
         msg: &[u8],
         _meta: &RecvMeta,
-        _env: &mut dyn crate::EapEnvironment,
-    ) -> PeerMethodLayerResult {
+        env: &'a mut dyn crate::EapEnvironment,
+    ) -> PeerMethodLayerResult<'a> {
         let inner = self
             .inner
             .get_or_insert_with(|| PeerTlsMethod::create_common_tls(&self.config));
@@ -120,9 +121,9 @@ impl PeerMethodLayer for PeerTlsMethod {
                 unreachable!();
             }
             Ok(EapCommonResult::Next(data)) => {
-                PeerMethodLayerResult::Send(MessageContent::new(&data))
+                PeerMethodLayerResult::Send(env.respond().write(&data))
             }
-            Err(()) => PeerMethodLayerResult::Failed,
+            Err(()) => PeerMethodLayerResult::Failed(env),
         }
     }
 

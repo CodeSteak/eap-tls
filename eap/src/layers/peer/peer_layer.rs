@@ -1,7 +1,7 @@
 use crate::{
     layers::mux::{HasId, TupleAppend, TupleById},
-    message::{Message, MessageContent},
-    EapEnvironment, EapEnvironmentResponse,
+    message::Message,
+    EapEnvironment, EapEnvironmentResponse, MessageBuilder,
 };
 
 use crate::layers::eap_layer::{PeerAuthLayer, PeerAuthLayerResult};
@@ -47,12 +47,12 @@ pub struct RecvMeta<'a> {
 pub trait PeerMethodLayer {
     /* */
     fn method_identifier(&self) -> u8;
-    fn recv(
+    fn recv<'a>(
         &mut self,
         msg: &[u8],
         meta: &RecvMeta,
-        env: &mut dyn EapEnvironment,
-    ) -> PeerMethodLayerResult;
+        env: &'a mut dyn EapEnvironment,
+    ) -> PeerMethodLayerResult<'a>;
 
     fn selectable_by_nak(&self) -> bool {
         true
@@ -67,11 +67,23 @@ pub trait PeerMethodLayer {
 
 pub const METHOD_CLIENT_PROPOSAL: u8 = 3;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PeerMethodLayerResult {
-    Noop,
-    Send(MessageContent),
-    Failed,
+pub enum PeerMethodLayerResult<'a> {
+    Noop(&'a mut dyn EapEnvironment),
+    Send(MessageBuilder<'a>),
+    Failed(&'a mut dyn EapEnvironment),
+}
+
+impl<'a> PartialEq for PeerMethodLayerResult<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (PeerMethodLayerResult::Noop(_), PeerMethodLayerResult::Noop(_)) => true,
+            (PeerMethodLayerResult::Send(a), PeerMethodLayerResult::Send(b)) => {
+                a.slice() == b.slice()
+            }
+            (PeerMethodLayerResult::Failed(_), PeerMethodLayerResult::Failed(_)) => true,
+            _ => false,
+        }
+    }
 }
 
 impl<I> PeerAuthLayer for PeerLayer<I>
@@ -115,7 +127,7 @@ where
                     c.reset();
                     self.next_layer = Some(method_identifier);
                     let res = c.recv(&msg.data[1..], &RecvMeta { message: msg }, env);
-                    self.process_result(res, env)
+                    self.process_result(res)
                 }
                 None => {
                     let mut data = vec![METHOD_CLIENT_PROPOSAL];
@@ -132,7 +144,7 @@ where
             match self.candidates.get_by_id_mut(method_identifier) {
                 Some(c) => {
                     let res = c.recv(&msg.data[1..], &RecvMeta { message: msg }, env);
-                    self.process_result(res, env)
+                    self.process_result(res)
                 }
                 None => {
                     unreachable!()
@@ -158,19 +170,13 @@ where
 }
 
 impl<I> PeerLayer<I> {
-    fn process_result<'a>(
-        &mut self,
-        res: PeerMethodLayerResult,
-        env: &'a mut dyn EapEnvironment,
-    ) -> PeerAuthLayerResult<'a> {
+    fn process_result<'a>(&mut self, res: PeerMethodLayerResult<'a>) -> PeerAuthLayerResult<'a> {
         match res {
-            PeerMethodLayerResult::Noop => PeerAuthLayerResult::Noop(env),
-            PeerMethodLayerResult::Send(data) => PeerAuthLayerResult::Send(
-                env.respond()
-                    .write(&data.data)
-                    .prepend(&[self.next_layer.unwrap()]),
-            ),
-            PeerMethodLayerResult::Failed => PeerAuthLayerResult::Failed(env),
+            PeerMethodLayerResult::Noop(env) => PeerAuthLayerResult::Noop(env),
+            PeerMethodLayerResult::Send(data) => {
+                PeerAuthLayerResult::Send(data.prepend(&[self.next_layer.unwrap()]))
+            }
+            PeerMethodLayerResult::Failed(env) => PeerAuthLayerResult::Failed(env),
         }
     }
 }
@@ -181,10 +187,17 @@ mod tests {
 
     use super::*;
 
-    #[derive(Debug, Clone, PartialEq, Eq)]
+    #[derive(Clone)]
+    enum DummyEvent {
+        Noop,
+        Send(Vec<u8>),
+        Failed,
+    }
+
+    #[derive(Clone)]
     struct DummyProtocol {
         method_identifier: u8,
-        events: Vec<PeerMethodLayerResult>,
+        events: Vec<DummyEvent>,
     }
 
     impl PeerMethodLayer for DummyProtocol {
@@ -192,13 +205,17 @@ mod tests {
             self.method_identifier
         }
 
-        fn recv(
+        fn recv<'a>(
             &mut self,
             _msg: &[u8],
             _meta: &RecvMeta,
-            _env: &mut dyn EapEnvironment,
-        ) -> PeerMethodLayerResult {
-            self.events.remove(0)
+            env: &'a mut dyn EapEnvironment,
+        ) -> PeerMethodLayerResult<'a> {
+            match self.events.remove(0) {
+                DummyEvent::Noop => PeerMethodLayerResult::Noop(env),
+                DummyEvent::Send(data) => PeerMethodLayerResult::Send(env.respond().write(&data)),
+                DummyEvent::Failed => PeerMethodLayerResult::Failed(env),
+            }
         }
 
         fn selectable_by_nak(&self) -> bool {
@@ -238,22 +255,15 @@ mod tests {
         let mut layer = PeerLayer::new()
             .with(DummyProtocol {
                 method_identifier: 1,
-                events: vec![
-                    PeerMethodLayerResult::Send(MessageContent {
-                        data: b"Bob".to_vec(),
-                    }),
-                    PeerMethodLayerResult::Failed,
-                ],
+                events: vec![DummyEvent::Send(b"Bob".to_vec()), DummyEvent::Failed],
             })
             .with(DummyProtocol {
                 method_identifier: 4,
-                events: vec![PeerMethodLayerResult::Send(MessageContent {
-                    data: b"Ok".to_vec(),
-                })],
+                events: vec![DummyEvent::Send(b"Ok".to_vec())],
             })
             .with(DummyProtocol {
                 method_identifier: 2,
-                events: vec![PeerMethodLayerResult::Failed],
+                events: vec![DummyEvent::Failed],
             });
 
         assert_eq!(

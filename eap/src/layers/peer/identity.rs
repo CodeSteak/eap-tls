@@ -1,4 +1,4 @@
-use crate::{layers::mux::HasId, message::MessageContent, EapEnvironment};
+use crate::{layers::mux::HasId, message::MessageContent, EapEnvironment, EapEnvironmentResponse};
 
 use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 
@@ -36,19 +36,17 @@ impl PeerMethodLayer for PeerIdentityMethod {
         1
     }
 
-    fn recv(
+    fn recv<'a>(
         &mut self,
         msg: &[u8],
         _meta: &RecvMeta,
-        _env: &mut dyn EapEnvironment,
-    ) -> PeerMethodLayerResult {
+        env: &'a mut dyn EapEnvironment,
+    ) -> PeerMethodLayerResult<'a> {
         if msg != b"" {
-            return PeerMethodLayerResult::Failed;
+            return PeerMethodLayerResult::Failed(env);
         }
 
-        PeerMethodLayerResult::Send(MessageContent {
-            data: self.name.clone(),
-        })
+        PeerMethodLayerResult::Send(env.respond().write(&self.name))
     }
 
     fn selectable_by_nak(&self) -> bool {
@@ -65,21 +63,20 @@ mod tests {
     #[test]
     fn peer_identity_method() {
         let mut env = crate::DefaultEnvironment::new();
+
         let mut method = PeerIdentityMethod::new(b"bob");
         assert_eq!(method.method_identifier(), 1);
 
         let m = Message::new(crate::message::MessageCode::Response, 0, b"");
 
-        assert_eq!(
+        assert!(matches!(
             method.recv(b"", &RecvMeta { message: &m }, &mut env),
-            PeerMethodLayerResult::Send(MessageContent {
-                data: b"bob".to_vec()
-            })
-        );
+            PeerMethodLayerResult::Send(response) if response.slice() == b"bob",
+        ));
 
-        assert_eq!(
+        assert!(matches!(
             method.recv(b"invalid data", &RecvMeta { message: &m }, &mut env),
-            PeerMethodLayerResult::Failed
-        );
+            PeerMethodLayerResult::Failed(_),
+        ));
     }
 }

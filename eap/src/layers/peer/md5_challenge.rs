@@ -1,4 +1,4 @@
-use crate::layers::mux::HasId;
+use crate::{layers::mux::HasId, EapEnvironmentResponse};
 
 use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 
@@ -36,30 +36,30 @@ impl PeerMethodLayer for PeerMD5ChallengeMethod {
         4
     }
 
-    fn recv(
+    fn recv<'a>(
         &mut self,
         msg: &[u8],
         meta: &RecvMeta,
-        _env: &mut dyn crate::EapEnvironment,
-    ) -> PeerMethodLayerResult {
+        env: &'a mut dyn crate::EapEnvironment,
+    ) -> PeerMethodLayerResult<'a> {
         // first byte is length of the challenge part,
         // but the content is vague and does not matter
         if msg.len() != 17 {
-            return PeerMethodLayerResult::Failed;
+            return PeerMethodLayerResult::Failed(env);
         }
 
-        let mut hashed_data = Vec::new();
-        hashed_data.extend_from_slice(&[meta.message.identifier]);
-        hashed_data.extend_from_slice(&self.password);
-        hashed_data.extend_from_slice(&msg[1..]);
+        let mut md5_context = md5::Context::new();
+        md5_context.consume(&[meta.message.identifier]);
+        md5_context.consume(&self.password);
+        md5_context.consume(&msg[1..]);
 
-        let hash = md5::compute(hashed_data).0;
+        let hash = md5_context.compute().0;
 
-        let mut response = vec![0u8; 17];
-        response[0] = hash.len() as u8; // fixed length
-        response[1..].copy_from_slice(&hash);
-
-        PeerMethodLayerResult::Send(crate::message::MessageContent { data: response })
+        PeerMethodLayerResult::Send(
+            env.respond() //
+                .write(&[hash.len() as u8])
+                .write(&hash),
+        )
     }
 }
 
@@ -83,11 +83,11 @@ mod tests {
 
         let result = method.recv(&m.data, &RecvMeta { message: &m }, &mut env);
 
-        assert_eq!(
-            result,
-            PeerMethodLayerResult::Send(crate::message::MessageContent {
-                data: crate::util::hex_to_vec("10 09 39 72 8a 8f 7f 82 f5 11 61 0c ff df 8b c3 1f"),
-            })
+        let expected =
+            crate::util::hex_to_vec("10 09 39 72 8a 8f 7f 82 f5 11 61 0c ff df 8b c3 1f");
+
+        assert!(
+            matches!(result, PeerMethodLayerResult::Send(content) if content.slice() == expected)
         );
     }
 
@@ -104,6 +104,7 @@ mod tests {
         );
 
         let result = method.recv(&m.data, &RecvMeta { message: &m }, &mut env);
-        assert_eq!(result, PeerMethodLayerResult::Failed);
+
+        assert!(matches!(result, PeerMethodLayerResult::Failed(_)));
     }
 }
