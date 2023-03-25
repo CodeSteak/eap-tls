@@ -1,3 +1,9 @@
+mod auth;
+mod peer;
+
+pub use auth::AuthTlsMethod;
+pub use peer::PeerTlsMethod;
+
 use std::ops::DerefMut;
 
 use rustls::ConnectionCommon;

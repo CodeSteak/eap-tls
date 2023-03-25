@@ -9,7 +9,7 @@ use crate::{
     EapEnvironmentResponse,
 };
 
-use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
+use crate::layers::peer::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 
 pub struct PeerTlsMethod {
     config: TlsConfig,

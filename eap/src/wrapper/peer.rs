@@ -1,3 +1,4 @@
+#[cfg(feature = "tls")]
 use dummycert::TlsConfig;
 
 use crate::{
@@ -47,7 +48,7 @@ impl Peer<(PeerIdentityMethod, PeerMD5ChallengeMethod)> {
 }
 
 #[cfg(feature = "tls")]
-impl Peer<(PeerIdentityMethod, crate::layers::peer::PeerTlsMethod)> {
+impl Peer<(PeerIdentityMethod, crate::eap_rustls::PeerTlsMethod)> {
     pub fn new_tls(identity: &str, config: TlsConfig) -> Self {
         Self {
             inner: EapLayer::new(
@@ -55,7 +56,7 @@ impl Peer<(PeerIdentityMethod, crate::layers::peer::PeerTlsMethod)> {
                     .with(crate::layers::peer::PeerIdentityMethod::new(
                         identity.as_bytes(),
                     ))
-                    .with(crate::layers::peer::PeerTlsMethod::new(config)),
+                    .with(crate::eap_rustls::PeerTlsMethod::new(config)),
             ),
             env: DefaultEnvironment::new(),
             buffer: Vec::new(),

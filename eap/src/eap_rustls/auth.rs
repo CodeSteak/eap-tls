@@ -12,9 +12,7 @@ use rustls::{
 
 use crate::EapEnvironment;
 
-use super::auth_layer::{
-    AuthMethodLayer as ThisLayer, AuthMethodLayerResult as ThisLayerResult, RecvMeta,
-};
+use crate::layers::auth::auth_layer::{AuthMethodLayer, AuthMethodLayerResult, RecvMeta};
 
 const METHOD_TLS: u8 = 13;
 
@@ -24,7 +22,7 @@ pub struct AuthTlsMethod {
 }
 
 impl HasId for AuthTlsMethod {
-    type Target = dyn ThisLayer;
+    type Target = dyn AuthMethodLayer;
 
     fn id(&self) -> u8 {
         self.method_identifier()
@@ -103,17 +101,17 @@ impl AuthTlsMethod {
     }
 }
 
-impl ThisLayer for AuthTlsMethod {
+impl AuthMethodLayer for AuthTlsMethod {
     fn method_identifier(&self) -> u8 {
         METHOD_TLS
     }
 
-    fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> ThisLayerResult<'a> {
+    fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> AuthMethodLayerResult<'a> {
         let inner = self
             .inner
             .get_or_insert_with(|| AuthTlsMethod::create_common_tls(&self.config));
 
-        ThisLayerResult::Send(env.respond().write(inner.start_packet()))
+        AuthMethodLayerResult::Send(env.respond().write(inner.start_packet()))
     }
 
     fn recv<'a>(
@@ -121,15 +119,17 @@ impl ThisLayer for AuthTlsMethod {
         msg: &[u8],
         _meta: &RecvMeta,
         env: &'a mut dyn EapEnvironment,
-    ) -> ThisLayerResult<'a> {
+    ) -> AuthMethodLayerResult<'a> {
         let inner = self
             .inner
             .get_or_insert_with(|| AuthTlsMethod::create_common_tls(&self.config));
 
         match inner.process(msg, true) {
-            Ok(EapCommonResult::Finished) => ThisLayerResult::Finished(env),
-            Ok(EapCommonResult::Next(data)) => ThisLayerResult::Send(env.respond().write(&data)),
-            Err(()) => ThisLayerResult::Failed(env),
+            Ok(EapCommonResult::Finished) => AuthMethodLayerResult::Finished(env),
+            Ok(EapCommonResult::Next(data)) => {
+                AuthMethodLayerResult::Send(env.respond().write(&data))
+            }
+            Err(()) => AuthMethodLayerResult::Failed(env),
         }
     }
 

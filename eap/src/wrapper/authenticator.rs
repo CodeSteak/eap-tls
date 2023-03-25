@@ -41,9 +41,9 @@ impl Authenticator<(AuthIdentityMethod, AuthMD5ChallengeMethod)> {
 }
 
 #[cfg(feature = "tls")]
-impl Authenticator<(AuthIdentityMethod, crate::layers::auth::AuthTlsMethod)> {
+impl Authenticator<(AuthIdentityMethod, crate::eap_rustls::AuthTlsMethod)> {
     pub fn new_tls(config: dummycert::TlsConfig) -> Self {
-        use crate::layers::auth::AuthTlsMethod;
+        use crate::eap_rustls::AuthTlsMethod;
         Self {
             inner: EapLayer::new(
                 AuthLayer::new()
