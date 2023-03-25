@@ -63,6 +63,7 @@ impl PeerMethodLayer for PeerMD5ChallengeMethod {
     }
 }
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
     use super::*;

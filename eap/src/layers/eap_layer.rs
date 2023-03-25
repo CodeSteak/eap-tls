@@ -165,10 +165,8 @@ pub enum StateError {
 
 impl<N: PeerAuthLayer> EapLayer<N> {
     pub fn new(inner: N) -> Self {
-        let mut next_id = [0];
-        getrandom::getrandom(&mut next_id).unwrap();
         EapLayer {
-            next_id: next_id[0],
+            next_id: 0, // gets initialized in start()
             state: State::Start,
             next_layer: inner,
             invalid_message_count: 0,
@@ -204,6 +202,12 @@ impl<N: PeerAuthLayer> EapLayer<N> {
     }
 
     pub fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> EapOutput<'a> {
+        if self.next_layer.is_auth() {
+            let next_id = &mut [0u8];
+            env.fill_random(&mut next_id[..]);
+            self.next_id = next_id[0];
+        }
+
         match &self.state {
             State::Start => {
                 self.state = State::Idle;
@@ -435,6 +439,7 @@ impl<N: PeerAuthLayer> EapLayer<N> {
 }
 
 // Unit tests
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
     use crate::DefaultEnvironment;

@@ -50,7 +50,7 @@ impl AuthMethodLayer for AuthMD5ChallengeMethod {
     }
 
     fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> AuthMethodLayerResult<'a> {
-        getrandom::getrandom(&mut self.challange_data).unwrap();
+        env.fill_random(&mut self.challange_data);
 
         let msg = env
             .respond()
@@ -87,6 +87,7 @@ impl AuthMethodLayer for AuthMD5ChallengeMethod {
     }
 }
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod test {
     use crate::{message::Message, DefaultEnvironment};

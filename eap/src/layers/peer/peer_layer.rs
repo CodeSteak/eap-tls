@@ -181,6 +181,7 @@ impl<I> PeerLayer<I> {
     }
 }
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
     use crate::{message::MessageCode, DefaultEnvironment, MessageBuilder};

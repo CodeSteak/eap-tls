@@ -4,7 +4,7 @@ use dummycert::TlsConfig;
 use rustls::{Certificate, ClientConfig, ClientConnection, PrivateKey};
 
 use crate::{
-    eap_tls::{CommonTLS, EapCommonResult},
+    eap_rustls::{CommonTLS, EapCommonResult},
     layers::mux::HasId,
     EapEnvironmentResponse,
 };

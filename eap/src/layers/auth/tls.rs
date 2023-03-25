@@ -1,5 +1,5 @@
 use crate::{
-    eap_tls::{CommonTLS, EapCommonResult},
+    eap_rustls::{CommonTLS, EapCommonResult},
     layers::mux::HasId,
     EapEnvironmentResponse,
 };

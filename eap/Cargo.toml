@@ -6,17 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["tls"]
+default = ["tls", "std"]
 tls = ["dep:rustls", "dep:rustls-pemfile"]
+std = ["dep:getrandom"]
 
 [dependencies]
 dummycert = {path = "../dummycert"}
 binrw = "0.10.0"
-md5 = "0.7.0"
+md5 = {version="0.7.0", features=["std"]}
 #rustls = {version = "0.20.8", optional = true}
 rustls = {path = "../../rustls/rustls", optional = true, features=["secret_extraction"]}
 rustls-pemfile = {version = "1.0.2", optional = true}
-getrandom = "0.2.8"
+getrandom = {version = "0.2.8", optional=true}
 
 [dev-dependencies]
 rand = {version = "0.8.5"}

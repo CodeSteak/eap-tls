@@ -55,6 +55,7 @@ impl ThisLayer for AuthIdentityMethod {
     }
 }
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
     use crate::message::Message;

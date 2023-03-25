@@ -182,6 +182,7 @@ where
     }
 }
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
 

@@ -54,6 +54,7 @@ impl PeerMethodLayer for PeerIdentityMethod {
     }
 }
 
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
     use crate::message::Message;
