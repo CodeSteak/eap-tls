@@ -6,8 +6,5 @@ members = [
     "eap",
     "stater",
     "dummycert",
-    "esptarget",
+    "demo_std_esp",
 ]
-
-#[patch.crates-io]
-#rustls = {path = "../rustls/rustls"}
