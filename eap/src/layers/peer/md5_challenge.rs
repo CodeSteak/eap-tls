@@ -1,17 +1,17 @@
-use crate::{layers::mux::HasId, EapEnvironmentResponse};
+use crate::{layers::mux::HasId, util::OwnedSlice, EapEnvironmentResponse};
 
 use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 
 #[derive(Clone)]
 pub struct PeerMD5ChallengeMethod {
-    password: Vec<u8>,
+    password: OwnedSlice<64>,
 }
 
 impl PeerMD5ChallengeMethod {
     #[allow(unused)]
     pub fn new(password: &[u8]) -> Self {
         Self {
-            password: password.to_vec(),
+            password: password.into(),
         }
     }
 }
@@ -76,13 +76,10 @@ mod tests {
 
         assert_eq!(method.method_identifier(), 4);
 
-        let m = crate::message::Message::new(
-            crate::message::MessageCode::Response,
-            0x69,
-            &crate::util::hex_to_vec("10 c7 24 0a c7 c5 94 58 ee 8f 7a 98 35 6c 61 53 f0"),
-        );
+        let data = crate::util::hex_to_vec("10 c7 24 0a c7 c5 94 58 ee 8f 7a 98 35 6c 61 53 f0");
+        let m = crate::message::Message::new(crate::message::MessageCode::Response, 0x69, &data);
 
-        let result = method.recv(&m.data, &RecvMeta { message: &m }, &mut env);
+        let result = method.recv(m.body, &RecvMeta { message: m }, &mut env);
 
         let expected =
             crate::util::hex_to_vec("10 09 39 72 8a 8f 7f 82 f5 11 61 0c ff df 8b c3 1f");
@@ -98,13 +95,10 @@ mod tests {
         let mut env = crate::DefaultEnvironment::new();
         let mut method = PeerMD5ChallengeMethod::new(&password);
 
-        let m = crate::message::Message::new(
-            crate::message::MessageCode::Response,
-            0x69,
-            &crate::util::hex_to_vec("10 c7 24 0a c7"),
-        );
+        let data = crate::util::hex_to_vec("10 c7 24 0a c7");
+        let m = crate::message::Message::new(crate::message::MessageCode::Response, 0x69, &data);
 
-        let result = method.recv(&m.data, &RecvMeta { message: &m }, &mut env);
+        let result = method.recv(m.body, &RecvMeta { message: m }, &mut env);
 
         assert!(matches!(result, PeerMethodLayerResult::Failed(_)));
     }

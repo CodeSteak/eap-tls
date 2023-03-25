@@ -225,9 +225,9 @@ impl<'a> ResponseMessage<'a> {
 }
 
 #[cfg(test)]
-impl From<crate::message::Message> for ResponseMessage<'static> {
+impl<'a> From<crate::message::Message<'a>> for ResponseMessage<'static> {
     fn from(message: crate::message::Message) -> Self {
-        let buffer = message.to_bytes();
+        let buffer = message.to_vec();
         let length = buffer.len();
 
         let builder = MessageBuilder {

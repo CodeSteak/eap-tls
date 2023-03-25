@@ -1,5 +1,6 @@
 use crate::layers::auth::auth_layer::{AuthMethodLayer, AuthMethodLayerResult};
 use crate::layers::mux::HasId;
+use crate::util::OwnedSlice;
 use crate::{EapEnvironment, EapEnvironmentResponse};
 
 use super::auth_layer::RecvMeta;
@@ -8,8 +9,8 @@ const METHOD_MD5_CHALLENGE: u8 = 4;
 
 #[derive(Clone)]
 pub struct AuthMD5ChallengeMethod {
-    password: Vec<u8>,
-    value: Vec<u8>, // <- Optional
+    password: OwnedSlice<64>,
+    value: OwnedSlice<64>, // <- Optional
     challange_data: [u8; 16],
 }
 
@@ -32,8 +33,8 @@ impl HasId for AuthMD5ChallengeMethod {
 impl AuthMD5ChallengeMethod {
     pub fn new(password: &[u8]) -> Self {
         Self {
-            password: password.to_vec(),
-            value: vec![],
+            password: password.into(),
+            value: OwnedSlice::from(&[] as &[u8]),
             challange_data: [0; 16],
         }
     }
@@ -112,12 +113,9 @@ mod test {
                 method.recv(
                     &[
                         0x10, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11,
-                        0x12, 0x13, 0x14, 0x15, 0x16
+                        0x12, 0x13, 0x14, 0x15, 0x16 // <- LOL Hex counting
                     ],
-                    &RecvMeta {
-                        // <- LOL Hex counting
-                        message: &m,
-                    },
+                    &RecvMeta { message: m },
                     &mut crate::DefaultEnvironment::new()
                 ),
                 AuthMethodLayerResult::Failed(_)
@@ -137,7 +135,7 @@ mod test {
         assert!(matches!(
             method.recv(
                 &crate::util::hex_to_vec("10 09 39 72 8a 8f 7f 82 f5 11 61 0c ff df 8b c3 1f"),
-                &RecvMeta { message: &m },
+                &RecvMeta { message: m },
                 &mut crate::DefaultEnvironment::new()
             ),
             AuthMethodLayerResult::Finished(_)

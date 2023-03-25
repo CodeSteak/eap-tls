@@ -75,7 +75,7 @@ mod tests {
 
         let m = Message::new(crate::message::MessageCode::Response, 0, b"bob");
         assert!(matches!(
-            method.recv(b"bob", &RecvMeta { message: &m }, &mut env),
+            method.recv(b"bob", &RecvMeta { message: m }, &mut env),
             ThisLayerResult::NextLayer(_)
         ));
 

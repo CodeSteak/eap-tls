@@ -3,6 +3,9 @@ use crate::{
     EapEnvironment, EapEnvironmentResponse, MessageBuilder, ResponseMessage,
 };
 
+#[cfg(not(feature = "std"))]
+use core as std;
+
 pub struct EapLayer<N> {
     state: State,
     // Count of invalid messages received,
@@ -54,9 +57,9 @@ pub trait PeerAuthLayer {
 
 #[allow(unused)]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PeerAuthLayerInput {
+pub enum PeerAuthLayerInput<'a> {
     Start,
-    Recv(Message),
+    Recv(Message<'a>),
 }
 
 pub enum PeerAuthLayerResult<'a> {
@@ -481,9 +484,9 @@ mod tests {
             } else {
                 assert_eq!(msg.code, MessageCode::Request);
             }
-            assert_eq!(msg.data.len(), 2);
+            assert_eq!(msg.body.len(), 2);
             self.counter += 1;
-            PeerAuthLayerResult::Send(env.respond().write([msg.data[0], self.counter].as_slice()))
+            PeerAuthLayerResult::Send(env.respond().write([msg.body[0], self.counter].as_slice()))
         }
 
         fn is_peer(&self) -> bool {
@@ -528,7 +531,7 @@ mod tests {
 
         assert_output(
             layer.receive(
-                &Message::new(MessageCode::Request, 42, &[23, 0]).to_bytes(),
+                &Message::new(MessageCode::Request, 42, &[23, 0]).to_vec(),
                 &mut env,
             ),
             EapOutput {
@@ -540,7 +543,7 @@ mod tests {
         // Throw away the message, the Message Id is Wrong
         assert_output(
             layer.receive(
-                &Message::new(MessageCode::Success, 44, &[]).to_bytes(),
+                &Message::new(MessageCode::Success, 44, &[]).to_vec(),
                 &mut env,
             ),
             EapOutput {
@@ -552,7 +555,7 @@ mod tests {
         // Now send the correct message
         assert_output(
             layer.receive(
-                &Message::new(MessageCode::Success, 42, &[]).to_bytes(),
+                &Message::new(MessageCode::Success, 42, &[]).to_vec(),
                 &mut env,
             ),
             EapOutput {
@@ -600,7 +603,7 @@ mod tests {
             },
         );
 
-        let peer_msg = Message::new(MessageCode::Request, 0, &[0, 0]).to_bytes();
+        let peer_msg = Message::new(MessageCode::Request, 0, &[0, 0]).to_vec();
 
         for _ in 0..env.max_retransmit_count() + 1 {
             // +1 because the first message is not a retransmission

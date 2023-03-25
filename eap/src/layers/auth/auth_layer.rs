@@ -18,7 +18,7 @@ pub struct AuthLayer<I> {
 pub const METHOD_CLIENT_PROPOSAL: u8 = 3;
 
 pub struct RecvMeta<'a> {
-    pub message: &'a Message,
+    pub message: Message<'a>,
 }
 
 pub trait AuthMethodLayer {
@@ -60,12 +60,12 @@ where
             return ThisLayerResult::Failed(env);
         }
 
-        if msg.data.is_empty() {
+        if msg.body.is_empty() {
             // Message Too Short
             return ThisLayerResult::Failed(env);
         }
 
-        let method_identifier = msg.data[0];
+        let method_identifier = msg.body[0];
         if method_identifier == METHOD_CLIENT_PROPOSAL {
             if self.peer_has_sent_nak {
                 // Protocol Violation
@@ -75,7 +75,7 @@ where
 
             for candidate in self.candidates.iter() {
                 if candidate.selectable_by_nak()
-                    && msg.data[1..].contains(&candidate.method_identifier())
+                    && msg.body[1..].contains(&candidate.method_identifier())
                 {
                     self.next_layer = candidate.method_identifier();
 
@@ -93,7 +93,7 @@ where
 
         let res = self
             .current_layer()
-            .recv(&msg.data[1..], &RecvMeta { message: msg }, env);
+            .recv(&msg.body[1..], &RecvMeta { message: *msg }, env);
 
         self.process_result(res)
     }

@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use core as std;
+
 pub trait TupleAppend<X> {
     type Output;
     fn append(self, t: X) -> Self::Output;

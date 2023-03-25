@@ -41,7 +41,7 @@ impl<I> PeerLayer<I> {
 }
 
 pub struct RecvMeta<'a> {
-    pub message: &'a Message,
+    pub message: Message<'a>,
 }
 
 pub trait PeerMethodLayer {
@@ -114,36 +114,38 @@ where
         msg: &Message,
         env: &'a mut dyn EapEnvironment,
     ) -> PeerAuthLayerResult<'a> {
-        if msg.data.is_empty() {
+        if msg.body.is_empty() {
             // Message Too Short
             return PeerAuthLayerResult::Failed(env);
         }
 
-        let method_identifier = msg.data[0];
+        let method_identifier = msg.body[0];
         if Some(method_identifier) != self.next_layer {
             // Find a candidate
             match self.candidates.get_by_id_mut(method_identifier) {
                 Some(c) => {
                     c.reset();
                     self.next_layer = Some(method_identifier);
-                    let res = c.recv(&msg.data[1..], &RecvMeta { message: msg }, env);
+                    let res = c.recv(&msg.body[1..], &RecvMeta { message: *msg }, env);
                     self.process_result(res)
                 }
                 None => {
-                    let mut data = vec![METHOD_CLIENT_PROPOSAL];
+                    let mut message_builder = env.respond();
+                    message_builder = message_builder.write(&[METHOD_CLIENT_PROPOSAL]);
+
                     for c in self.candidates.iter() {
                         if c.selectable_by_nak() {
-                            data.push(c.method_identifier());
+                            message_builder = message_builder.write(&[c.method_identifier()]);
                         }
                     }
 
-                    PeerAuthLayerResult::Send(env.respond().write(&data))
+                    PeerAuthLayerResult::Send(message_builder)
                 }
             }
         } else {
             match self.candidates.get_by_id_mut(method_identifier) {
                 Some(c) => {
-                    let res = c.recv(&msg.data[1..], &RecvMeta { message: msg }, env);
+                    let res = c.recv(&msg.body[1..], &RecvMeta { message: *msg }, env);
                     self.process_result(res)
                 }
                 None => {

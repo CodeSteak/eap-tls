@@ -1,14 +1,14 @@
-use std::{
-    error::Error,
-    fmt::{Display, Formatter},
-};
+#[cfg(not(feature = "std"))]
+use core as std;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Message {
+use std::fmt::{Display, Formatter};
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub struct Message<'a> {
     pub code: MessageCode,
     pub identifier: u8,
     pub total_length: u16,
-    pub data: Vec<u8>,
+    pub body: &'a [u8],
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -26,7 +26,9 @@ pub enum MessageCode {
     Failure = 4,
 }
 
-impl Error for MessageParseError {}
+#[cfg(feature = "std")]
+impl std::error::Error for MessageParseError {}
+
 impl Display for MessageParseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -36,8 +38,8 @@ impl Display for MessageParseError {
     }
 }
 
-impl Message {
-    pub fn parse(data: &[u8]) -> Result<Self, MessageParseError> {
+impl<'a> Message<'a> {
+    pub fn parse(data: &'a [u8]) -> Result<Self, MessageParseError> {
         if data.len() < 4 {
             return Err(MessageParseError::InvalidLength);
         }
@@ -63,29 +65,31 @@ impl Message {
             code,
             identifier,
             total_length,
-            data: data[4..].to_vec(),
+            body: &data[4..],
         })
     }
 
-    pub fn new(code: MessageCode, identifier: u8, data: &[u8]) -> Self {
+    pub fn new(code: MessageCode, identifier: u8, data: &'a [u8]) -> Self {
         Self {
             code,
             identifier,
             total_length: (4 + data.len()) as u16,
-            data: data.to_vec(),
+            body: data,
         }
     }
 
-    pub fn to_bytes(&self) -> Vec<u8> {
+    #[cfg(feature = "std")]
+    pub fn to_vec(self) -> Vec<u8> {
         let mut buffer = vec![];
         self.write(&mut buffer).unwrap();
         buffer
     }
 
+    #[cfg(feature = "std")]
     pub fn write<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
         writer.write_all(&[self.code as u8, self.identifier])?;
         writer.write_all(&self.total_length.to_be_bytes())?;
-        writer.write_all(&self.data)?;
+        writer.write_all(self.body)?;
         Ok(())
     }
 }
@@ -109,7 +113,7 @@ mod tests {
                 identifier: 0x59,
                 code: MessageCode::Response,
                 total_length: 0x0009,
-                data: hex("01 75 73 65 72"),
+                body: &hex("01 75 73 65 72"),
             },
             Message::parse(&hex("02 59 00 09 01 75 73 65 72")).unwrap(),
         )
