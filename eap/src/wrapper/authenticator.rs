@@ -5,20 +5,11 @@ use crate::{
         mux::TupleById,
         AuthLayer, EapLayer,
     },
-    DefaultEnvironment,
+    DefaultEnvironment, EapWrapper,
 };
 
-pub struct AuthenticatorStepResult {
-    pub status: AuthenticatorStepStatus,
-    pub response: Option<Vec<u8>>,
-}
-
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
-pub enum AuthenticatorStepStatus {
-    Ok,
-    Error,
-    Finished,
-}
+pub use super::EapStepResult as AuthenticatorStepResult;
+pub use super::EapStepStatus as AuthenticatorStepStatus;
 
 pub struct Authenticator<I> {
     env: DefaultEnvironment,
@@ -27,7 +18,7 @@ pub struct Authenticator<I> {
 }
 
 impl Authenticator<(AuthIdentityMethod, AuthMD5ChallengeMethod)> {
-    pub fn new(password: &str) -> Self {
+    pub fn new_password(password: &str) -> Self {
         Self {
             inner: EapLayer::new(
                 AuthLayer::new()
@@ -56,15 +47,15 @@ impl Authenticator<(AuthIdentityMethod, crate::eap_rustls::AuthTlsMethod)> {
     }
 }
 
-impl<I> Authenticator<I>
+impl<I> EapWrapper for Authenticator<I>
 where
     I: TupleById<dyn AuthMethodLayer>,
 {
-    pub fn receive(&mut self, data: &[u8]) {
+    fn receive(&mut self, data: &[u8]) {
         self.buffer = data.to_vec();
     }
 
-    pub fn step(&mut self) -> AuthenticatorStepResult {
+    fn step(&mut self) -> AuthenticatorStepResult<'_> {
         let Self {
             inner, //
             env,   //
@@ -95,7 +86,7 @@ where
                 layers::eap_layer::EapStatus::Failed(_) => AuthenticatorStepStatus::Error,
                 layers::eap_layer::EapStatus::InternalError(_) => AuthenticatorStepStatus::Error,
             },
-            response: res.message.map(|m| m.slice().to_vec()),
+            response: res.message.map(|m| m.into_slice()),
         }
     }
 }

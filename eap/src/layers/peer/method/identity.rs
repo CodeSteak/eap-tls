@@ -1,6 +1,6 @@
 use crate::{layers::mux::HasId, util::OwnedSlice, EapEnvironment, EapEnvironmentResponse};
 
-use super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
+use super::super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 
 #[derive(Clone)]
 pub struct PeerIdentityMethod {

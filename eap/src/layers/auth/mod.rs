@@ -1,8 +1,7 @@
 pub mod auth_layer;
 pub use auth_layer::{AuthLayer, AuthMethodLayer};
 
-mod identity;
-mod md5_challange;
+pub mod method;
 
-pub use identity::AuthIdentityMethod;
-pub use md5_challange::AuthMD5ChallengeMethod;
+pub use method::identity::AuthIdentityMethod;
+pub use method::md5_challange::AuthMD5ChallengeMethod;

@@ -168,6 +168,20 @@ impl<'a> MessageBuilder<'a> {
         &buffer[offset..offset + length]
     }
 
+    pub fn into_slice(self) -> &'a [u8] {
+        match self.env {
+            EnvOrOwned::Env(env) => {
+                let offset = self.offset;
+                let length = self.length;
+                &env.response_buffer()[offset..offset + length]
+            }
+            #[cfg(test)]
+            EnvOrOwned::Owned { .. } => {
+                panic!("Cannot convert a test environment into a slice")
+            }
+        }
+    }
+
     pub fn build(mut self, code: MessageCode, identifier: u8) -> ResponseMessage<'a> {
         let mut header = [0u8; 4];
         header[0] = code as u8;
@@ -221,6 +235,10 @@ pub struct ResponseMessage<'a>(MessageBuilder<'a>);
 impl<'a> ResponseMessage<'a> {
     pub fn slice(&self) -> &[u8] {
         self.0.slice()
+    }
+
+    pub fn into_slice(self) -> &'a [u8] {
+        self.0.into_slice()
     }
 }
 

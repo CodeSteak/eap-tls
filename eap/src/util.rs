@@ -11,7 +11,7 @@ pub enum OwnedSlice<const N: usize> {
         buffer: [u8; N],
         len: u8,
     },
-    #[cfg(feature = "std")]
+    #[cfg(any(feature = "std", feature = "alloc"))]
     Heap(Vec<u8>),
 }
 
@@ -27,11 +27,11 @@ impl<const N: usize> From<&[u8]> for OwnedSlice<N> {
                 len: value.len() as u8,
             }
         } else {
-            #[cfg(feature = "std")]
+            #[cfg(any(feature = "std", feature = "alloc"))]
             {
                 Self::Heap(value.to_vec())
             }
-            #[cfg(not(feature = "std"))]
+            #[cfg(not(any(feature = "std", feature = "alloc")))]
             {
                 panic!("Cannot allocate up to {} bytes on no_std", value.len());
             }

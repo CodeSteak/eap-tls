@@ -1,8 +1,41 @@
 mod authenticator;
+use core::borrow::Borrow;
+
 pub use authenticator::*;
 
 mod peer;
 pub use peer::*;
+
+pub trait EapWrapper {
+    fn receive(&mut self, msg: &[u8]);
+    fn step(&mut self) -> EapStepResult<'_>;
+}
+
+pub struct EapStepResult<'a> {
+    pub status: EapStepStatus,
+    pub response: Option<&'a [u8]>,
+}
+
+impl EapStepResult<'_> {
+    pub fn into_owned(self) -> OwnedEapStepResult {
+        OwnedEapStepResult {
+            status: self.status,
+            response: self.response.map(|x| x.to_vec()),
+        }
+    }
+}
+
+pub struct OwnedEapStepResult {
+    pub status: EapStepStatus,
+    pub response: Option<Vec<u8>>,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub enum EapStepStatus {
+    Ok,
+    Error,
+    Finished,
+}
 
 #[cfg(test)]
 mod tests {
@@ -25,26 +58,32 @@ mod tests {
         let mut rng = StdRng::seed_from_u64(package_drop_rate.to_bits() as u64 ^ 0xdeadbeef ^ seed);
 
         for _ in 0..1000 {
-            let peer_res = peer.step();
+            let EapStepResult {
+                status: peer_status,
+                response: peer_response,
+            } = peer.step();
+            let peer_response = peer_response.map(|m| m.to_vec());
 
-            if let Some(response) = peer_res.response {
+            if let Some(response) = peer_response {
                 if rng.gen::<f32>() > package_drop_rate {
                     auth.receive(&response);
                 }
             }
 
-            let auth_res = auth.step();
+            let EapStepResult {
+                status: auth_status,
+                response: auth_response,
+            } = auth.step();
+            let auth_response = auth_response.map(|m| m.to_vec());
 
-            if let Some(response) = auth_res.response {
+            if let Some(response) = auth_response {
                 if rng.gen::<f32>() > package_drop_rate {
                     peer.receive(&response);
                 }
             }
 
-            if peer_res.status != PeerStepStatus::Ok
-                && auth_res.status != AuthenticatorStepStatus::Ok
-            {
-                return (peer_res.status, auth_res.status);
+            if peer_status != PeerStepStatus::Ok && auth_status != AuthenticatorStepStatus::Ok {
+                return (peer_status, auth_status);
             }
         }
 
@@ -53,8 +92,8 @@ mod tests {
 
     #[test]
     fn test_wrapper_success() {
-        let mut peer = Peer::new("testuser", "pasword123");
-        let mut auth = Authenticator::new("pasword123");
+        let mut peer = Peer::new_password("testuser", "pasword123");
+        let mut auth = Authenticator::new_password("pasword123");
 
         let (peer_res, auth_res) = run(&mut peer, &mut auth, None);
 
@@ -64,8 +103,8 @@ mod tests {
 
     #[test]
     fn test_wrapper_fail() {
-        let mut peer = Peer::new("testuser", "i forgot my password");
-        let mut auth = Authenticator::new("pasword123");
+        let mut peer = Peer::new_password("testuser", "i forgot my password");
+        let mut auth = Authenticator::new_password("pasword123");
 
         let (peer_res, auth_res) = run(&mut peer, &mut auth, None);
 
@@ -75,8 +114,8 @@ mod tests {
 
     #[test]
     fn test_wrapper_package_loss() {
-        let mut peer = Peer::new("testuser", "pasword123");
-        let mut auth = Authenticator::new("pasword123");
+        let mut peer = Peer::new_password("testuser", "pasword123");
+        let mut auth = Authenticator::new_password("pasword123");
 
         let (peer_res, auth_res) = run(&mut peer, &mut auth, Some((0.5, 4808468)));
 
@@ -90,8 +129,8 @@ mod tests {
         let tries = 100;
 
         for i in 0..tries {
-            let mut peer = Peer::new("testuser", "pasword123");
-            let mut auth = Authenticator::new("pasword123");
+            let mut peer = Peer::new_password("testuser", "pasword123");
+            let mut auth = Authenticator::new_password("pasword123");
 
             let (peer_res, auth_res) = run(&mut peer, &mut auth, Some((0.5, i)));
 
@@ -114,8 +153,8 @@ mod tests {
 
     #[test]
     fn test_timeout() {
-        let mut peer = Peer::new("testuser", "pasword123");
-        let mut auth = Authenticator::new("pasword123");
+        let mut peer = Peer::new_password("testuser", "pasword123");
+        let mut auth = Authenticator::new_password("pasword123");
 
         let (peer_res, auth_res) = run(&mut peer, &mut auth, Some((0.9, 6211651))); // Drop ~ all packages
 

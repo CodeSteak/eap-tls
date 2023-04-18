@@ -1,6 +1,6 @@
 use crate::{layers::mux::HasId, EapEnvironment, EapEnvironmentResponse};
 
-use super::auth_layer::{
+use super::super::auth_layer::{
     AuthMethodLayer as ThisLayer, AuthMethodLayerResult as ThisLayerResult, RecvMeta,
 };
 

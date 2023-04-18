@@ -1,7 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "tls")]
-mod eap_rustls;
+pub mod eap_rustls;
 
 mod layers;
 mod message;

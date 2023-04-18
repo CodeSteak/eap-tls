@@ -112,7 +112,7 @@ where
         }
 
         if !only_ack {
-            const MTU: usize = 512;
+            const MTU: usize = 1000;
 
             let is_first = match self.sendbufferstate {
                 SendBufferState::NewPayload { .. } => true,

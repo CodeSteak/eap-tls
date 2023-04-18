@@ -6,5 +6,4 @@ members = [
     "eap",
     "stater",
     "dummycert",
-    "demo_std_esp",
 ]

@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use eap::{Authenticator, AuthenticatorStepStatus, PeerStepStatus};
+use eap::{Authenticator, AuthenticatorStepStatus, EapWrapper, PeerStepStatus};
 use wifieap::{peer::EapPeer, server::EapServer, EapStatus, TlsConfig};
 
 fn main() {
@@ -26,14 +26,14 @@ fn own_impl_tls_both() {
         println!("=== {i}");
 
         println!("== SERVER");
-        let res_server = server.step();
+        let res_server = server.step().into_owned();
         if let Some(buffer) = &res_server.response {
             hex_dump("S->P", buffer);
             client.receive(buffer);
         }
 
         println!("== PEER");
-        let res_client = client.step();
+        let res_client = client.step().into_owned();
         if let Some(buffer) = &res_client.response {
             hex_dump("P->S", buffer);
             server.receive(buffer);
@@ -103,7 +103,7 @@ fn own_impl_tls_server() {
     for i in 0..100 {
         println!("=== {i}");
 
-        let res_server = server.step();
+        let res_server = server.step().into_owned();
         if let Some(buffer) = &res_server.response {
             hex_dump("S->P", buffer);
             peer.receive(buffer);
@@ -139,12 +139,12 @@ fn own_impl_main() {
         .set_password("42")
         .build();
 
-    let mut server = Authenticator::new("42");
+    let mut server = Authenticator::new_password("42");
 
     for i in 0..100 {
         println!("=== {i}");
 
-        let res_server = server.step();
+        let res_server = server.step().into_owned();
         if let Some(buffer) = &res_server.response {
             hex_dump("S->P", buffer);
             peer.receive(buffer);

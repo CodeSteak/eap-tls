@@ -3,7 +3,7 @@ use crate::layers::mux::HasId;
 use crate::util::OwnedSlice;
 use crate::{EapEnvironment, EapEnvironmentResponse};
 
-use super::auth_layer::RecvMeta;
+use super::super::auth_layer::RecvMeta;
 
 const METHOD_MD5_CHALLENGE: u8 = 4;
 

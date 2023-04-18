@@ -8,7 +8,7 @@ use crate::{
         peer::{peer_layer::PeerMethodLayer, PeerIdentityMethod, PeerMD5ChallengeMethod},
         EapLayer, PeerLayer,
     },
-    DefaultEnvironment,
+    DefaultEnvironment, EapWrapper,
 };
 
 pub struct Peer<I> {
@@ -17,20 +17,11 @@ pub struct Peer<I> {
     buffer: Vec<u8>,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
-pub enum PeerStepStatus {
-    Ok,
-    Error,
-    Finished,
-}
-
-pub struct PeerStepResult {
-    pub status: PeerStepStatus,
-    pub response: Option<Vec<u8>>,
-}
+pub use super::EapStepResult as PeerStepResult;
+pub use super::EapStepStatus as PeerStepStatus;
 
 impl Peer<(PeerIdentityMethod, PeerMD5ChallengeMethod)> {
-    pub fn new(identity: &str, password: &str) -> Self {
+    pub fn new_password(identity: &str, password: &str) -> Self {
         Self {
             inner: EapLayer::new(
                 PeerLayer::new()
@@ -64,15 +55,15 @@ impl Peer<(PeerIdentityMethod, crate::eap_rustls::PeerTlsMethod)> {
     }
 }
 
-impl<I> Peer<I>
+impl<I> EapWrapper for Peer<I>
 where
     I: TupleById<dyn PeerMethodLayer>,
 {
-    pub fn receive(&mut self, data: &[u8]) {
+    fn receive(&mut self, data: &[u8]) {
         self.buffer = data.to_vec();
     }
 
-    pub fn step(&mut self) -> PeerStepResult {
+    fn step(&mut self) -> PeerStepResult<'_> {
         let Self {
             inner, //
             env,   //
@@ -103,7 +94,7 @@ where
                 EapStatus::Failed(_) => PeerStepStatus::Error,
                 EapStatus::InternalError(_) => PeerStepStatus::Error,
             },
-            response: res.message.map(|m| m.slice().to_vec()),
+            response: res.message.map(|m| m.into_slice()),
         }
     }
 }
