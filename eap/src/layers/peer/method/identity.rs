@@ -10,7 +10,9 @@ pub struct PeerIdentityMethod {
 impl PeerIdentityMethod {
     #[allow(unused)]
     pub fn new(name: &[u8]) -> Self {
-        Self { name: name.into() }
+        Self {
+            name: name.try_into().expect("name too long for nostd"),
+        }
     }
 }
 

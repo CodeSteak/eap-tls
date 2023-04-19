@@ -1,6 +1,4 @@
-#[cfg(feature = "std")]
 pub mod default_env;
-#[cfg(feature = "std")]
 pub use default_env::*;
 
 use crate::message::MessageCode;
@@ -233,12 +231,19 @@ impl<'a> Eq for MessageBuilder<'a> {}
 pub struct ResponseMessage<'a>(MessageBuilder<'a>);
 
 impl<'a> ResponseMessage<'a> {
+    #[deprecated]
     pub fn slice(&self) -> &[u8] {
-        self.0.slice()
+        self.as_ref()
     }
 
     pub fn into_slice(self) -> &'a [u8] {
         self.0.into_slice()
+    }
+}
+
+impl AsRef<[u8]> for ResponseMessage<'_> {
+    fn as_ref(&self) -> &[u8] {
+        self.0.slice()
     }
 }
 

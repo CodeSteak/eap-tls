@@ -11,7 +11,7 @@ impl PeerMD5ChallengeMethod {
     #[allow(unused)]
     pub fn new(password: &[u8]) -> Self {
         Self {
-            password: password.into(),
+            password: password.try_into().expect("password too long for nostd"),
         }
     }
 }

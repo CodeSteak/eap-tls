@@ -33,8 +33,8 @@ impl HasId for AuthMD5ChallengeMethod {
 impl AuthMD5ChallengeMethod {
     pub fn new(password: &[u8]) -> Self {
         Self {
-            password: password.into(),
-            value: OwnedSlice::from(&[] as &[u8]),
+            password: password.try_into().expect("password too long for nostd"),
+            value: OwnedSlice::new(),
             challange_data: [0; 16],
         }
     }

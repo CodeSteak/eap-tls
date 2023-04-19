@@ -15,25 +15,37 @@ pub enum OwnedSlice<const N: usize> {
     Heap(Vec<u8>),
 }
 
-impl<const N: usize> From<&[u8]> for OwnedSlice<N> {
-    fn from(value: &[u8]) -> Self {
+impl<const N: usize> OwnedSlice<N> {
+    pub fn from(value: &[u8]) -> Self {
+        Self::try_from(value).expect("Cannot allocate up to N bytes on no_std")
+    }
+
+    pub fn new() -> Self {
+        Self::from(&[])
+    }
+}
+
+impl<const N: usize> TryFrom<&[u8]> for OwnedSlice<N> {
+    type Error = ();
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         assert!(N <= u8::MAX as usize);
 
         if value.len() <= N {
             let mut buffer = [0; N];
             buffer[..value.len()].copy_from_slice(value);
-            Self::Inline {
+            Ok(Self::Inline {
                 buffer,
                 len: value.len() as u8,
-            }
+            })
         } else {
             #[cfg(any(feature = "std", feature = "alloc"))]
             {
-                Self::Heap(value.to_vec())
+                Ok(Self::Heap(value.to_vec()))
             }
             #[cfg(not(any(feature = "std", feature = "alloc")))]
             {
-                panic!("Cannot allocate up to {} bytes on no_std", value.len());
+                Err(())
             }
         }
     }
