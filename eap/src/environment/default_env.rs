@@ -59,11 +59,11 @@ impl EapEnvironment for StdBoxEnvironment {
     }
 
     fn response_buffer_mut(&mut self) -> &mut [u8] {
-        &mut *self.response_buffer
+        &mut self.response_buffer
     }
 
     fn response_buffer(&self) -> &[u8] {
-        &*self.response_buffer
+        &self.response_buffer
     }
 }
 

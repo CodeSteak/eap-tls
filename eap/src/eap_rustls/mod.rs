@@ -37,6 +37,14 @@ impl<C> CommonTLS<C> {
     }
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum TlsError {
+    MessageEmpty,
+    MessageShort,
+    NotAllDataConsumed { consumed: usize, total: usize },
+    GenericTlsError,
+}
+
 impl<C, T> CommonTLS<C>
 where
     C: DerefMut<Target = ConnectionCommon<T>>,
@@ -52,9 +60,13 @@ where
         &[START_PACKET]
     }
 
-    pub fn process(&mut self, msg: &[u8], return_on_finish: bool) -> Result<EapCommonResult, ()> {
+    pub fn process(
+        &mut self,
+        msg: &[u8],
+        return_on_finish: bool,
+    ) -> Result<EapCommonResult, TlsError> {
         if msg.is_empty() {
-            return Err(());
+            return Err(TlsError::MessageEmpty);
         }
 
         let header = Header::parse(msg[0]);
@@ -64,8 +76,7 @@ where
         if has_data || header.start {
             let mut payload: &[u8] = if header.length_included {
                 if msg.len() < TLS_LEN_FIELD_LEN + 1 {
-                    eprintln!("TLS: message too short");
-                    return Err(());
+                    return Err(TlsError::MessageShort);
                 }
                 &msg[(1 + TLS_LEN_FIELD_LEN)..]
             } else {
@@ -76,12 +87,15 @@ where
             match self.con.read_tls(&mut payload) {
                 Ok(n) if n == payload_len => { /* ok */ }
                 Ok(n) => {
-                    eprintln!("TLS read_tls: not all data consumed, {n} vs. {payload_len}",);
-                    return Err(());
+                    // eprintln!("TLS read_tls: not all data consumed, {n} vs. {payload_len}",);
+                    return Err(TlsError::NotAllDataConsumed {
+                        consumed: n,
+                        total: payload_len,
+                    });
                 }
-                Err(e) => {
-                    eprintln!("TLS Error {e}");
-                    return Err(());
+                Err(_e) => {
+                    // eprintln!("TLS Error {e}");
+                    return Err(TlsError::GenericTlsError);
                 }
             };
 
@@ -93,7 +107,7 @@ where
                 }
                 Err(e) => {
                     eprintln!("TLS Error {e}");
-                    return Err(());
+                    return Err(TlsError::GenericTlsError);
                 }
             };
         }
@@ -135,7 +149,7 @@ where
                 }
                 Err(e) => {
                     eprintln!("TLS Error {e}");
-                    return Err(());
+                    return Err(TlsError::GenericTlsError);
                 }
             };
 

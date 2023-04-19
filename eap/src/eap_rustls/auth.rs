@@ -129,7 +129,7 @@ impl AuthMethodLayer for AuthTlsMethod {
             Ok(EapCommonResult::Next(data)) => {
                 AuthMethodLayerResult::Send(env.respond().write(&data))
             }
-            Err(()) => AuthMethodLayerResult::Failed(env),
+            Err(_) => AuthMethodLayerResult::Failed(env),
         }
     }
 

@@ -96,12 +96,12 @@ where
 
     fn can_succeed(&mut self) -> bool {
         for c in self.candidates.iter() {
-            if Some(false) == c.can_succeed() {
-                return false;
+            if let Some(val) = c.can_succeed() {
+                return val;
             }
         }
 
-        true
+        false
     }
 
     fn start<'a>(&mut self, env: &'a mut dyn EapEnvironment) -> PeerAuthLayerResult<'a> {

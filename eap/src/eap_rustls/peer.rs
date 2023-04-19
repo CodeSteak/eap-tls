@@ -122,7 +122,7 @@ impl PeerMethodLayer for PeerTlsMethod {
             Ok(EapCommonResult::Next(data)) => {
                 PeerMethodLayerResult::Send(env.respond().write(&data))
             }
-            Err(()) => PeerMethodLayerResult::Failed(env),
+            Err(_) => PeerMethodLayerResult::Failed(env),
         }
     }
 

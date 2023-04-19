@@ -278,7 +278,7 @@ mod tests {
         let builder = env.respond().write(&[5, 6, 7, 8]).prepend(&[0]);
         let message = builder.build(MessageCode::Request, 0);
 
-        assert_eq!(message.slice(), &[1, 0, 0, 9, 0, 5, 6, 7, 8]);
+        assert_eq!(message.as_ref(), &[1, 0, 0, 9, 0, 5, 6, 7, 8]);
     }
 
     #[test]
@@ -292,14 +292,14 @@ mod tests {
             .prepend(&[0])
             .build(MessageCode::Request, 0);
 
-        let message_was = message.slice().to_vec();
+        let message_was = message.as_ref().to_vec();
 
         let env: &mut dyn EapEnvironment = &mut org_env;
-        let stored = env.last_message().ok().unwrap().slice().to_vec();
+        let stored = env.last_message().ok().unwrap().as_ref().to_vec();
         assert_eq!(message_was, stored);
 
         let env: &mut dyn EapEnvironment = &mut org_env;
-        let stored = env.last_message().ok().unwrap().slice().to_vec();
+        let stored = env.last_message().ok().unwrap().as_ref().to_vec();
         assert_eq!(message_was, stored);
     }
 }

@@ -36,6 +36,10 @@ impl PeerMethodLayer for PeerMD5ChallengeMethod {
         4
     }
 
+    fn can_succeed(&self) -> Option<bool> {
+        Some(true)
+    }
+
     fn recv<'a>(
         &mut self,
         msg: &[u8],

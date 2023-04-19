@@ -1,5 +1,4 @@
 mod authenticator;
-use core::borrow::Borrow;
 
 pub use authenticator::*;
 

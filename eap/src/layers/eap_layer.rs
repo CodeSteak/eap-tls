@@ -505,7 +505,7 @@ mod tests {
         // ignore message id
         if let Some(msg) = &expected.message {
             if let Some(out_msg) = &output.message {
-                assert_eq!(msg.slice(), out_msg.slice())
+                assert_eq!(msg.as_ref(), out_msg.as_ref())
             } else {
                 panic!("Expected message but got None");
             }
