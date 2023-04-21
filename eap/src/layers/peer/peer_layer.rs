@@ -1,5 +1,5 @@
 use crate::{
-    layers::mux::{HasId, TupleAppend, TupleById},
+    layers::mux::{TupleAppend, TupleById, TupleElement},
     message::Message,
     EapEnvironment, EapEnvironmentResponse, MessageBuilder,
 };
@@ -31,7 +31,7 @@ impl<I> PeerLayer<I> {
     pub fn with<P>(self, candidate: P) -> PeerLayer<<I as TupleAppend<P>>::Output>
     where
         I: TupleAppend<P>,
-        P: HasId<Target = dyn PeerMethodLayer>,
+        P: TupleElement<Target = dyn PeerMethodLayer>,
     {
         PeerLayer {
             next_layer: None,
@@ -227,7 +227,7 @@ mod tests {
         }
     }
 
-    impl HasId for DummyProtocol {
+    impl TupleElement for DummyProtocol {
         type Target = dyn PeerMethodLayer;
         fn id(&self) -> u8 {
             self.method_identifier()

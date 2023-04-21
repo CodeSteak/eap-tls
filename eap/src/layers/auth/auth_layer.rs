@@ -1,5 +1,5 @@
 use crate::{
-    layers::mux::{HasId, TupleAppend, TupleById},
+    layers::mux::{TupleAppend, TupleById, TupleElement},
     message::{Message, MessageCode},
     EapEnvironment, MessageBuilder,
 };
@@ -118,7 +118,7 @@ impl<I> AuthLayer<I> {
     pub fn with<P>(self, candidate: P) -> AuthLayer<<I as TupleAppend<P>>::Output>
     where
         I: TupleAppend<P>,
-        P: HasId<Target = dyn AuthMethodLayer>,
+        P: TupleElement<Target = dyn AuthMethodLayer>,
     {
         AuthLayer {
             peer_has_sent_nak: false,
@@ -213,7 +213,7 @@ mod tests {
         }
     }
 
-    impl HasId for DummyProtocol {
+    impl TupleElement for DummyProtocol {
         type Target = dyn AuthMethodLayer;
 
         fn id(&self) -> u8 {

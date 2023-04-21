@@ -1,5 +1,5 @@
 use crate::layers::auth::auth_layer::{AuthMethodLayer, AuthMethodLayerResult};
-use crate::layers::mux::HasId;
+use crate::layers::mux::TupleElement;
 use crate::util::OwnedSlice;
 use crate::{EapEnvironment, EapEnvironmentResponse};
 
@@ -14,7 +14,7 @@ pub struct AuthMD5ChallengeMethod {
     challange_data: [u8; 16],
 }
 
-impl HasId for AuthMD5ChallengeMethod {
+impl TupleElement for AuthMD5ChallengeMethod {
     type Target = dyn AuthMethodLayer;
 
     fn id(&self) -> u8 {

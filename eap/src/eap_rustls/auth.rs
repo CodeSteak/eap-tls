@@ -1,6 +1,6 @@
 use crate::{
     eap_rustls::{CommonTLS, EapCommonResult},
-    layers::mux::HasId,
+    layers::mux::TupleElement,
     EapEnvironmentResponse,
 };
 use std::sync::Arc;
@@ -21,7 +21,7 @@ pub struct AuthTlsMethod {
     inner: Option<CommonTLS<ServerConnection>>,
 }
 
-impl HasId for AuthTlsMethod {
+impl TupleElement for AuthTlsMethod {
     type Target = dyn AuthMethodLayer;
 
     fn id(&self) -> u8 {

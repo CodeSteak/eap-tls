@@ -1,4 +1,4 @@
-use crate::{layers::mux::HasId, util::OwnedSlice, EapEnvironment, EapEnvironmentResponse};
+use crate::{layers::mux::TupleElement, util::OwnedSlice, EapEnvironment, EapEnvironmentResponse};
 
 use super::super::peer_layer::{PeerMethodLayer, PeerMethodLayerResult, RecvMeta};
 
@@ -16,7 +16,7 @@ impl PeerIdentityMethod {
     }
 }
 
-impl HasId for PeerIdentityMethod {
+impl TupleElement for PeerIdentityMethod {
     type Target = dyn PeerMethodLayer;
     fn id(&self) -> u8 {
         self.method_identifier()

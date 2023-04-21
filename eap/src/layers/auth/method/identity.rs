@@ -1,4 +1,4 @@
-use crate::{layers::mux::HasId, EapEnvironment, EapEnvironmentResponse};
+use crate::{layers::mux::TupleElement, EapEnvironment, EapEnvironmentResponse};
 
 use super::super::auth_layer::{
     AuthMethodLayer as ThisLayer, AuthMethodLayerResult as ThisLayerResult, RecvMeta,
@@ -15,7 +15,7 @@ impl AuthIdentityMethod {
     }
 }
 
-impl HasId for AuthIdentityMethod {
+impl TupleElement for AuthIdentityMethod {
     type Target = dyn ThisLayer;
 
     fn id(&self) -> u8 {

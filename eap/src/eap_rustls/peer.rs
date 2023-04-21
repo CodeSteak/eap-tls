@@ -5,7 +5,7 @@ use rustls::{Certificate, ClientConfig, ClientConnection, PrivateKey};
 
 use crate::{
     eap_rustls::{CommonTLS, EapCommonResult},
-    layers::mux::HasId,
+    layers::mux::TupleElement,
     EapEnvironmentResponse,
 };
 
@@ -16,7 +16,7 @@ pub struct PeerTlsMethod {
     inner: Option<CommonTLS<ClientConnection>>,
 }
 
-impl HasId for PeerTlsMethod {
+impl TupleElement for PeerTlsMethod {
     type Target = dyn PeerMethodLayer;
     fn id(&self) -> u8 {
         self.method_identifier()

@@ -18,7 +18,7 @@ impl<X> TupleAppend<X> for () {
     }
 }
 
-pub trait HasId {
+pub trait TupleElement {
     type Target: ?Sized;
 
     fn id(&self) -> u8;
@@ -28,6 +28,10 @@ pub trait HasId {
 
 pub trait TupleById<Target: ?Sized> {
     fn id_to_idx(&self, id: u8) -> Option<usize>;
+
+    fn get_by_id(&self, id: u8) -> Option<&Target> {
+        self.id_to_idx(id).and_then(|idx| self.get_by_pos(idx))
+    }
 
     fn get_by_id_mut(&mut self, id: u8) -> Option<&mut Target> {
         self.id_to_idx(id).and_then(|idx| self.get_by_pos_mut(idx))
@@ -98,7 +102,7 @@ macro_rules! tuple_impl {
         #[allow(non_snake_case)]
         impl<$($n),+, Target : ?Sized> TupleById<Target> for ($($n),+,)
         where
-            $($n: HasId<Target = Target>,)+
+            $($n: TupleElement<Target = Target>,)+
         {
             fn id_to_idx(&self, id: u8) -> Option<usize> {
                 let ($($n),+,) = self;
@@ -187,7 +191,7 @@ mod tests {
         }
     }
 
-    impl HasId for A {
+    impl TupleElement for A {
         type Target = dyn MyTrait;
 
         fn id(&self) -> u8 {
@@ -203,7 +207,7 @@ mod tests {
         }
     }
 
-    impl HasId for B {
+    impl TupleElement for B {
         type Target = dyn MyTrait;
 
         fn id(&self) -> u8 {
