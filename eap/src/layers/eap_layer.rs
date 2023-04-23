@@ -448,7 +448,7 @@ impl<N: PeerAuthLayer> EapLayer<N> {
 #[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
-    use crate::DefaultEnvironment;
+    use crate::{DefaultEnvironment, StaticEnvironment};
 
     pub use super::*;
 
@@ -626,16 +626,19 @@ mod tests {
     #[test]
     /// An EAP Auth must abort after too many retransmissions.
     fn test_retransmit_auth() {
-        let mut env = DefaultEnvironment::new();
+        let mut env = StaticEnvironment::<1020>::new(|buf| {
+            // Stronger Randomness for the Message Id
+            for e in buf.iter_mut() {
+                *e = 42;
+            }
+        });
 
         let mut layer = EapLayer::new(DummyInnerLayer::new(true));
-
-        layer.next_id = 0;
 
         assert_output(
             layer.start(&mut env),
             EapOutput {
-                message: Some(Message::new(MessageCode::Request, 0, &[0, 0]).into()),
+                message: Some(Message::new(MessageCode::Request, 42, &[0, 0]).into()),
                 status: EapStatus::Ok,
             },
         );
@@ -644,7 +647,7 @@ mod tests {
             assert_output(
                 layer.timeout(&mut env),
                 EapOutput {
-                    message: Some(Message::new(MessageCode::Request, 0, &[0, 0]).into()),
+                    message: Some(Message::new(MessageCode::Request, 42, &[0, 0]).into()),
                     status: EapStatus::Ok,
                 },
             );
@@ -653,7 +656,7 @@ mod tests {
         assert_output(
             layer.timeout(&mut env),
             EapOutput {
-                message: Some(Message::new(MessageCode::Failure, 1, &[]).into()),
+                message: Some(Message::new(MessageCode::Failure, 43, &[]).into()),
                 status: EapStatus::Failed(StateError::Timeout),
             },
         );
