@@ -1,17 +1,11 @@
+use common::{EapStepResult, EapStepStatus, EapWrapper};
 use std::{collections::HashMap, ffi::c_void, sync::Once};
 use tempfile::NamedTempFile;
 
 pub use crate::bindings_peer::*;
-use crate::{EapStatus, TlsConfig};
+use crate::TlsConfig;
 
 static PEER_INIT: Once = Once::new();
-
-#[derive(Debug, Clone)]
-pub struct EapPeerResult {
-    pub status: EapStatus,
-    pub response: Option<Vec<u8>>,
-    pub key_material: Option<Vec<u8>>,
-}
 
 pub struct EapPeer {
     callbacks: Box<eapol_callbacks>,
@@ -24,6 +18,9 @@ pub struct EapPeer {
     state_bool: HashMap<eapol_bool_var, bool>,
     state_int: HashMap<eapol_int_var, u32>,
     _temp_files: Vec<NamedTempFile>,
+
+    response_buffer: Vec<u8>,
+    final_status: Option<EapStepStatus>,
 }
 
 pub struct EapPeerBuilder {
@@ -59,6 +56,18 @@ impl EapPeerBuilder {
 impl EapPeer {
     pub fn builder(identity: &str) -> EapPeerBuilder {
         EapPeerBuilder::new(identity)
+    }
+
+    pub fn new_password(identity: &str, password: &str) -> Box<EapPeer> {
+        let mut builder = EapPeerBuilder::new(identity);
+        builder.set_password(password);
+        builder.build()
+    }
+
+    pub fn new_tls(identity: &str, tls: TlsConfig) -> Box<EapPeer> {
+        let mut builder = EapPeerBuilder::new(identity);
+        builder.set_tls_config(tls);
+        builder.build()
     }
 
     fn new(builder: &EapPeerBuilder) -> Box<Self> {
@@ -133,6 +142,8 @@ impl EapPeer {
             state_bool: HashMap::new(),
             state_int: HashMap::new(),
             _temp_files: temp_files,
+            response_buffer: vec![],
+            final_status: None,
         });
 
         me.state = unsafe {
@@ -146,73 +157,6 @@ impl EapPeer {
         me.state_bool.insert(eapol_bool_var_EAPOL_portEnabled, true);
 
         me
-    }
-
-    pub fn step(&mut self) -> EapPeerResult {
-        let _state_changed = unsafe { eap_peer_sm_step(self.state) } == 1;
-
-        let should_sent_response = *self
-            .state_bool
-            .get(&eapol_bool_var_EAPOL_eapResp)
-            .unwrap_or(&false);
-        let success = *self
-            .state_bool
-            .get(&eapol_bool_var_EAPOL_eapSuccess)
-            .unwrap_or(&false);
-        let failure = *self
-            .state_bool
-            .get(&eapol_bool_var_EAPOL_eapFail)
-            .unwrap_or(&false);
-
-        let response = if should_sent_response {
-            let data = unsafe { eap_get_eapRespData(self.state) };
-            if data.is_null() {
-                None
-            } else {
-                let ret =
-                    Some(unsafe { std::slice::from_raw_parts((*data).buf, (*data).used) }.to_vec());
-                unsafe { wpabuf_free(data) };
-                ret
-            }
-        } else {
-            None
-        };
-
-        let key_material = if success && unsafe { eap_key_available(self.state) } != 0 {
-            unsafe {
-                let mut length: usize = 0;
-                let key_data = eap_get_eapKeyData(self.state, (&mut length) as *mut usize);
-
-                Some(std::slice::from_raw_parts(key_data, length).to_vec())
-            }
-        } else {
-            None
-        };
-
-        assert!(!(failure && success));
-
-        let status = if success {
-            EapStatus::Finished
-        } else if failure {
-            EapStatus::Failed
-        } else {
-            EapStatus::Ok
-        };
-
-        EapPeerResult {
-            status,
-            response,
-            key_material,
-        }
-    }
-
-    pub fn receive(&mut self, input: &[u8]) {
-        self.state_bool.insert(eapol_bool_var_EAPOL_eapReq, true);
-        unsafe {
-            wpabuf_free(self.wpabuf);
-        }
-
-        self.wpabuf = unsafe { wpabuf_alloc_copy(input.as_ptr() as *const c_void, input.len()) };
     }
 
     unsafe extern "C" fn get_config(ctx: *mut c_void) -> *mut eap_peer_config {
@@ -265,10 +209,84 @@ impl EapPeer {
     }
 }
 
+impl EapWrapper for Box<EapPeer> {
+    fn receive(&mut self, msg: &[u8]) {
+        self.state_bool.insert(eapol_bool_var_EAPOL_eapReq, true);
+        unsafe {
+            wpabuf_free(self.wpabuf);
+        }
+
+        self.wpabuf = unsafe { wpabuf_alloc_copy(msg.as_ptr() as *const c_void, msg.len()) };
+    }
+
+    fn step(&mut self) -> EapStepResult<'_> {
+        let _state_changed = unsafe { eap_peer_sm_step(self.state) } == 1;
+
+        let should_sent_response = *self
+            .state_bool
+            .get(&eapol_bool_var_EAPOL_eapResp)
+            .unwrap_or(&false);
+        let success = *self
+            .state_bool
+            .get(&eapol_bool_var_EAPOL_eapSuccess)
+            .unwrap_or(&false);
+        let failure = *self
+            .state_bool
+            .get(&eapol_bool_var_EAPOL_eapFail)
+            .unwrap_or(&false);
+
+        let response = if should_sent_response {
+            let data = unsafe { eap_get_eapRespData(self.state) };
+            if data.is_null() {
+                None
+            } else {
+                let ret =
+                    Some(unsafe { std::slice::from_raw_parts((*data).buf, (*data).used) }.to_vec());
+                unsafe { wpabuf_free(data) };
+                ret
+            }
+        } else {
+            None
+        };
+
+        let _key_material = if success && unsafe { eap_key_available(self.state) } != 0 {
+            unsafe {
+                let mut length: usize = 0;
+                let key_data = eap_get_eapKeyData(self.state, (&mut length) as *mut usize);
+
+                Some(std::slice::from_raw_parts(key_data, length).to_vec())
+            }
+        } else {
+            None
+        };
+
+        assert!(!(failure && success));
+
+        let status = if success {
+            self.final_status = Some(EapStepStatus::Finished);
+            EapStepStatus::Finished
+        } else if failure {
+            self.final_status = Some(EapStepStatus::Error);
+            EapStepStatus::Error
+        } else if let Some(f) = self.final_status {
+            f
+        } else {
+            EapStepStatus::Ok
+        };
+
+        EapStepResult {
+            response: response.map(|buffer| {
+                self.response_buffer = buffer;
+                &self.response_buffer[..]
+            }),
+            status,
+        }
+    }
+}
+
 impl Drop for EapPeer {
     fn drop(&mut self) {
         unsafe {
-            // TODO : More cleanup
             eap_peer_sm_deinit(self.state);
             wpabuf_free(self.wpabuf);
         };

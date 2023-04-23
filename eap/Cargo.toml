@@ -19,7 +19,8 @@ md5 = {version="0.7.0", default-features=false}
 rustls = {path = "../../rustls/rustls", optional = true, features=["secret_extraction"]}
 rustls-pemfile = {version = "1.0.2", optional = true}
 getrandom = {version = "0.2.8", optional=true}
-
+common = {path = "../common"}
 
 [dev-dependencies]
 rand = {version = "0.8.5"}
+wifieap = {path = "../wifieap"}

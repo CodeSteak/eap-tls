@@ -1,7 +1,9 @@
 use std::time::Instant;
 
 use eap::{Authenticator, AuthenticatorStepStatus, EapWrapper, PeerStepStatus};
-use wifieap::{peer::EapPeer, server::EapServer, EapStatus, TlsConfig};
+use wifieap::{peer::EapPeer, server::EapServer, TlsConfig};
+
+use common::*;
 
 fn main() {
     let arg = std::env::args().nth(1).unwrap_or("0".to_string());
@@ -57,7 +59,7 @@ fn own_impl_tls_both() {
 
 fn own_impl_tls_client() {
     let mut peer = eap::Peer::new_tls("user", TlsConfig::dummy_client());
-    let mut server = EapServer::buider()
+    let mut server = EapServer::builder()
         .set_tls_config(TlsConfig::dummy_server())
         .allow_tls()
         //.set_password("user", "42")
@@ -67,7 +69,7 @@ fn own_impl_tls_client() {
     for i in 0..100 {
         println!("=== {i}");
 
-        let res_server = server.step();
+        let res_server = server.step().into_owned();
         if let Some(buffer) = &res_server.response {
             hex_dump("S->P", buffer);
             peer.receive(buffer);
@@ -77,13 +79,13 @@ fn own_impl_tls_client() {
         //    hex_dump("S Key: ", mat);
         //}
 
-        let res_peer = peer.step();
+        let res_peer = peer.step().into_owned();
         if let Some(buffer) = &res_peer.response {
             hex_dump("P->S", buffer);
             server.receive(buffer);
         }
 
-        if res_server.status != EapStatus::Ok || res_peer.status != PeerStepStatus::Ok {
+        if res_server.status != EapStepStatus::Ok || res_peer.status != PeerStepStatus::Ok {
             eprintln!(
                 "peer {:?} server {:?}",
                 &res_peer.status, &res_server.status
@@ -119,11 +121,8 @@ fn own_impl_tls_server() {
             server.receive(buffer);
         }
 
-        if let Some(mat) = &res_peer.key_material {
-            hex_dump("P Key: ", mat);
-        }
-
-        if res_server.status != AuthenticatorStepStatus::Ok || res_peer.status != EapStatus::Ok {
+        if res_server.status != AuthenticatorStepStatus::Ok || res_peer.status != EapStepStatus::Ok
+        {
             eprintln!(
                 "peer {:?} server {:?}",
                 &res_peer.status, &res_server.status
@@ -160,11 +159,8 @@ fn own_impl_main() {
             server.receive(buffer);
         }
 
-        if let Some(mat) = &res_peer.key_material {
-            hex_dump("P Key: ", mat);
-        }
-
-        if res_server.status != AuthenticatorStepStatus::Ok || res_peer.status != EapStatus::Ok {
+        if res_server.status != AuthenticatorStepStatus::Ok || res_peer.status != EapStepStatus::Ok
+        {
             eprintln!(
                 "peer {:?} server {:?}",
                 &res_peer.status, &res_server.status
@@ -182,7 +178,7 @@ fn main_peer_server_orig() {
         .build();
 
     println!("=== INIT SERVER");
-    let mut server = EapServer::buider()
+    let mut server = EapServer::builder()
         .set_tls_config(TlsConfig::dummy_server())
         .allow_tls()
         //.set_password("user", "42")
@@ -193,7 +189,7 @@ fn main_peer_server_orig() {
         println!("=== {i}");
 
         println!("== SERVER");
-        let res_server = server.step();
+        let res_server = server.step().into_owned();
         println!("== END SERVER");
 
         if let Some(buffer) = &res_server.response {
@@ -201,23 +197,15 @@ fn main_peer_server_orig() {
             peer.receive(buffer);
         }
 
-        if let Some(mat) = &res_server.key_material {
-            hex_dump("S Key: ", mat);
-        }
-
         println!("== PEER");
-        let res_peer = peer.step();
+        let res_peer = peer.step().into_owned();
         println!("== END PEER");
         if let Some(buffer) = &res_peer.response {
             hex_dump("P->S", buffer);
             server.receive(buffer);
         }
 
-        if let Some(mat) = &res_peer.key_material {
-            hex_dump("P Key: ", mat);
-        }
-
-        if res_server.status != EapStatus::Ok || res_peer.status != EapStatus::Ok {
+        if res_server.status != EapStepStatus::Ok || res_peer.status != EapStepStatus::Ok {
             eprintln!(
                 "peer {:?} server {:?}",
                 &res_peer.status, &res_server.status

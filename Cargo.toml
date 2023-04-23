@@ -6,4 +6,5 @@ members = [
     "eap",
     "stater",
     "dummycert",
+    "common",
 ]

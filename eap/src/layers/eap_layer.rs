@@ -413,9 +413,12 @@ impl<N: PeerAuthLayer> EapLayer<N> {
                     EapOutput::success(None)
                 }
             }
-            PeerAuthLayerResult::Failed(_) => {
+            PeerAuthLayerResult::Failed(env) => {
                 self.state = State::Failed;
-                EapOutput::failed(StateError::EndOfConversation, None)
+                EapOutput::failed(
+                    StateError::EndOfConversation,
+                    Some(env.respond_with(MessageCode::Failure, self.next_id, &[])),
+                )
             }
         }
     }

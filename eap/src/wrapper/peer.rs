@@ -8,7 +8,7 @@ use crate::{
         peer::{peer_layer::PeerMethodLayer, PeerIdentityMethod, PeerMD5ChallengeMethod},
         EapLayer, PeerLayer,
     },
-    DefaultEnvironment, EapWrapper,
+    DefaultEnvironment,
 };
 
 pub struct Peer<I> {
@@ -17,8 +17,9 @@ pub struct Peer<I> {
     buffer: Vec<u8>,
 }
 
-pub use super::EapStepResult as PeerStepResult;
-pub use super::EapStepStatus as PeerStepStatus;
+pub use common::EapStepResult as PeerStepResult;
+pub use common::EapStepStatus as PeerStepStatus;
+pub use common::EapWrapper;
 
 impl Peer<(PeerIdentityMethod, PeerMD5ChallengeMethod)> {
     pub fn new_password(identity: &str, password: &str) -> Self {

@@ -23,13 +23,6 @@ pub mod util;
 #[cfg(test)]
 mod test;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum EapStatus {
-    Ok,
-    Finished,
-    Failed,
-}
-
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum EapMethod {
     TLS,

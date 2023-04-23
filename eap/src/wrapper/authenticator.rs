@@ -5,11 +5,12 @@ use crate::{
         mux::TupleById,
         AuthLayer, EapLayer,
     },
-    DefaultEnvironment, EapWrapper,
+    DefaultEnvironment,
 };
 
-pub use super::EapStepResult as AuthenticatorStepResult;
-pub use super::EapStepStatus as AuthenticatorStepStatus;
+pub use common::EapStepResult as AuthenticatorStepResult;
+pub use common::EapStepStatus as AuthenticatorStepStatus;
+pub use common::EapWrapper;
 
 pub struct Authenticator<I> {
     env: DefaultEnvironment,

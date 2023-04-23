@@ -17,3 +17,6 @@ pub use wrapper::*;
 
 #[cfg(feature = "tls")]
 pub use dummycert::TlsConfig;
+
+#[cfg(test)]
+mod integration_tests;

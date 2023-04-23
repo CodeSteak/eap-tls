@@ -1,6 +1,8 @@
+use common::{EapStepResult, EapStepStatus, EapWrapper};
+
 pub use crate::bindings_server::*;
 use crate::util;
-use crate::{EapMethod, EapStatus, TlsConfig};
+use crate::{EapMethod, TlsConfig};
 
 use std::{
     collections::HashMap,
@@ -9,13 +11,6 @@ use std::{
 };
 
 static SERVER_INIT: Once = Once::new();
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct EapServerResult {
-    pub response: Option<Vec<u8>>,
-    pub key_material: Option<Vec<u8>>,
-    pub status: EapStatus,
-}
 
 #[derive(Default, Clone)]
 pub struct EapServerBuilder {
@@ -68,6 +63,8 @@ pub struct EapServer {
     _tls_state: Option<EapServerTlsState>,
     users: HashMap<String, String>,
     method_priorities: Vec<EapMethod>,
+    response_buffer: Vec<u8>,
+    final_status: Option<EapStepStatus>,
 }
 
 // This is keep around to prevent the memory from being freed
@@ -88,8 +85,22 @@ impl Drop for EapServerTlsState {
 }
 
 impl EapServer {
-    pub fn buider() -> EapServerBuilder {
+    pub fn builder() -> EapServerBuilder {
         EapServerBuilder::new()
+    }
+
+    pub fn new_password(identity: &str, password: &str) -> Box<EapServer> {
+        let mut builder = EapServerBuilder::new();
+        builder.set_password(identity, password);
+        builder.allow_md5();
+        builder.build()
+    }
+
+    pub fn new_tls(tls: TlsConfig) -> Box<EapServer> {
+        let mut builder = EapServerBuilder::new();
+        builder.set_tls_config(tls);
+        builder.allow_tls();
+        builder.build()
     }
 
     fn init(builder: EapServerBuilder) -> Box<Self> {
@@ -160,6 +171,8 @@ impl EapServer {
             _tls_state: tls_state,
             users: builder.passwords,
             method_priorities: builder.method_priorities,
+            response_buffer: vec![],
+            final_status: None,
         });
 
         me.state = unsafe {
@@ -178,67 +191,6 @@ impl EapServer {
 
         me
     }
-
-    pub fn receive(&mut self, buffer: &[u8]) {
-        unsafe {
-            wpabuf_free((*self.interface).eapRespData);
-            (*self.interface).eapRespData =
-                wpabuf_alloc_copy(buffer.as_ptr() as *const c_void, buffer.len());
-            (*self.interface).eapResp = true as _;
-        }
-    }
-
-    pub fn step(&mut self) -> EapServerResult {
-        let _state_changed = unsafe { eap_server_sm_step(self.state) } == 1;
-
-        let sent_message = unsafe { (*self.interface).eapReq } != 0;
-        let finished = unsafe { (*self.interface).eapSuccess } != 0;
-        let failed = unsafe { (*self.interface).eapFail } != 0;
-        let has_key_material = unsafe { (*self.interface).eapKeyAvailable } != 0;
-
-        // clear flags
-        unsafe {
-            (*self.interface).eapReq = false as _;
-            (*self.interface).eapSuccess = false as _;
-            (*self.interface).eapFail = false as _;
-        }
-
-        let status = if failed {
-            EapStatus::Failed
-        } else if finished {
-            EapStatus::Finished
-        } else {
-            EapStatus::Ok
-        };
-
-        let buffer_filled = unsafe { !(*self.interface).eapReqData.is_null() };
-        let response = if (sent_message || finished || failed) && buffer_filled {
-            let data = unsafe { (*self.interface).eapReqData };
-            let data = unsafe { std::slice::from_raw_parts((*data).buf, (*data).used) }.to_vec();
-
-            Some(data)
-        } else {
-            None
-        };
-
-        let key_material = if has_key_material {
-            unsafe {
-                let key = (*self.interface).eapKeyData;
-                let length = (*self.interface).eapKeyDataLen;
-                let key = std::slice::from_raw_parts(key, length).to_vec();
-                Some(key)
-            }
-        } else {
-            None
-        };
-
-        EapServerResult {
-            status,
-            response,
-            key_material,
-        }
-    }
-
     unsafe extern "C" fn server_get_eap_user(
         ctx: *mut c_void,
         identity: *const u8,
@@ -286,11 +238,78 @@ impl EapServer {
     }
 }
 
+impl EapWrapper for Box<EapServer> {
+    fn receive(&mut self, buffer: &[u8]) {
+        unsafe {
+            wpabuf_free((*self.interface).eapRespData);
+            (*self.interface).eapRespData =
+                wpabuf_alloc_copy(buffer.as_ptr() as *const c_void, buffer.len());
+            (*self.interface).eapResp = true as _;
+        }
+    }
+
+    fn step(&mut self) -> EapStepResult {
+        let _state_changed = unsafe { eap_server_sm_step(self.state) } == 1;
+
+        let sent_message = unsafe { (*self.interface).eapReq } != 0;
+        let finished = unsafe { (*self.interface).eapSuccess } != 0;
+        let failed = unsafe { (*self.interface).eapFail } != 0;
+        let has_key_material = unsafe { (*self.interface).eapKeyAvailable } != 0;
+
+        // clear flags
+        unsafe {
+            (*self.interface).eapReq = false as _;
+            (*self.interface).eapSuccess = false as _;
+            (*self.interface).eapFail = false as _;
+        }
+
+        let status = if failed {
+            self.final_status = Some(EapStepStatus::Error);
+            EapStepStatus::Error
+        } else if finished {
+            self.final_status = Some(EapStepStatus::Finished);
+            EapStepStatus::Finished
+        } else if let Some(f) = self.final_status {
+            f
+        } else {
+            EapStepStatus::Ok
+        };
+
+        let buffer_filled = unsafe { !(*self.interface).eapReqData.is_null() };
+        let response = if (sent_message || finished || failed) && buffer_filled {
+            let data = unsafe { (*self.interface).eapReqData };
+            let data = unsafe { std::slice::from_raw_parts((*data).buf, (*data).used) }.to_vec();
+
+            Some(data)
+        } else {
+            None
+        };
+
+        let _key_material = if has_key_material {
+            unsafe {
+                let key = (*self.interface).eapKeyData;
+                let length = (*self.interface).eapKeyDataLen;
+                let key = std::slice::from_raw_parts(key, length).to_vec();
+                Some(key)
+            }
+        } else {
+            None
+        };
+
+        EapStepResult {
+            status,
+            response: response.map(|buffer| {
+                self.response_buffer = buffer;
+                self.response_buffer.as_slice()
+            }),
+        }
+    }
+}
+
 impl Drop for EapServer {
     fn drop(&mut self) {
         unsafe {
             eap_server_sm_deinit(self.state);
         }
-        // TODO : More cleanup ???
     }
 }
