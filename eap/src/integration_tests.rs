@@ -3,17 +3,14 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::{Authenticator, Peer};
 
+#[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
 struct ExtraOptions {
-    seed: u64,
-    package_drop_rate: f32,
     allow_timeout: bool,
 }
 
 impl ExtraOptions {
     fn wpa_does_not_give_up() -> Self {
         Self {
-            seed: 0,
-            package_drop_rate: 0.0,
             allow_timeout: true,
         }
     }
@@ -25,16 +22,7 @@ fn run<A: EapWrapper, B: EapWrapper>(
     mut auth: A,
     extra: Option<ExtraOptions>,
 ) -> (EapStepStatus, EapStepStatus) {
-    let ExtraOptions {
-        package_drop_rate,
-        seed,
-        allow_timeout,
-    } = extra.unwrap_or(ExtraOptions {
-        seed: 0,
-        package_drop_rate: 0.0,
-        allow_timeout: false,
-    });
-    let mut rng = StdRng::seed_from_u64(package_drop_rate.to_bits() as u64 ^ 0xdeadbeef ^ seed);
+    let ExtraOptions { allow_timeout } = extra.unwrap_or_default();
 
     for _ in 0..25 {
         let EapStepResult {
@@ -44,10 +32,8 @@ fn run<A: EapWrapper, B: EapWrapper>(
         let auth_response = auth_response.map(|m| m.to_vec());
 
         if let Some(response) = auth_response {
-            if rng.gen::<f32>() > package_drop_rate {
-                hex_dump("Auth -> Peer", &response);
-                peer.receive(&response);
-            }
+            hex_dump("Auth -> Peer", &response);
+            peer.receive(&response);
         }
 
         let EapStepResult {
@@ -57,10 +43,8 @@ fn run<A: EapWrapper, B: EapWrapper>(
         let peer_response = peer_response.map(|m| m.to_vec());
 
         if let Some(response) = peer_response {
-            if rng.gen::<f32>() > package_drop_rate {
-                hex_dump("Peer -> Auth", &response);
-                auth.receive(&response);
-            }
+            hex_dump("Peer -> Auth", &response);
+            auth.receive(&response);
         }
 
         println!("peer_status={peer_status:?} auth_status={auth_status:?}");
