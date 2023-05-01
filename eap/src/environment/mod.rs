@@ -24,9 +24,18 @@ pub trait EapEnvironment {
     fn response_buffer_state(&mut self) -> &mut ResponseBufferState;
     fn response_buffer_mut(&mut self) -> &mut [u8];
     fn response_buffer(&self) -> &[u8];
+
+    fn last_message_buffer(&mut self) -> Option<&[u8]> {
+        match *self.response_buffer_state() {
+            ResponseBufferState::Message { offset, length } => {
+                Some(&self.response_buffer()[offset..offset + length])
+            }
+            _ => None,
+        }
+    }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub enum ResponseBufferState {
     #[default]
     Dirty,

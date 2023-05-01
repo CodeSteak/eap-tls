@@ -9,17 +9,17 @@ edition = "2021"
 [features]
 default = ["tls", "std", "alloc"]
 tls = ["dep:rustls", "dep:rustls-pemfile", "dep:dummycert", "std"]
-std = ["dep:getrandom"]
+std = ["dep:getrandom", "common/std"]
 alloc = []
 
 [dependencies]
 dummycert = {path = "../dummycert", optional = true}
 md5 = {version="0.7.0", default-features=false}
-#rustls = {version = "0.20.8", optional = true}
-rustls = {path = "../../rustls/rustls", optional = true, features=["secret_extraction"]}
+rustls = {version = "0.20.8", optional = true}
+#rustls = {path = "../../rustls/rustls", optional = true, features=["secret_extraction"]}
 rustls-pemfile = {version = "1.0.2", optional = true}
 getrandom = {version = "0.2.8", optional=true}
-common = {path = "../common"}
+common = {path = "../common", default-features=false}
 
 [dev-dependencies]
 rand = {version = "0.8.5"}

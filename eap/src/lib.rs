@@ -3,9 +3,11 @@
 #[cfg(feature = "tls")]
 pub mod eap_rustls;
 
-mod layers;
+pub mod layers;
 mod message;
 pub mod util;
+
+pub use common;
 
 pub mod environment;
 pub use environment::*;

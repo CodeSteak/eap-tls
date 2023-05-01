@@ -10,6 +10,7 @@ pub struct EapStepResult<'a> {
     pub response: Option<&'a [u8]>,
 }
 
+#[cfg(feature = "std")]
 impl EapStepResult<'_> {
     pub fn into_owned(self) -> OwnedEapStepResult {
         OwnedEapStepResult {
@@ -19,6 +20,7 @@ impl EapStepResult<'_> {
     }
 }
 
+#[cfg(feature = "std")]
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct OwnedEapStepResult {
     pub status: EapStepStatus,

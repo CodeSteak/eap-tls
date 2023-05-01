@@ -63,7 +63,7 @@ where
     pub fn process(
         &mut self,
         msg: &[u8],
-        return_on_finish: bool,
+        is_auth: bool,
     ) -> Result<EapCommonResult, TlsError> {
         if msg.is_empty() {
             return Err(TlsError::MessageEmpty);
@@ -72,8 +72,8 @@ where
         let header = Header::parse(msg[0]);
         let only_ack = header.more_fragments;
 
-        let has_data = msg.len() > 1;
-        if has_data || header.start {
+        let data_was_sent = msg.len() > 1;
+        if data_was_sent || header.start {
             let mut payload: &[u8] = if header.length_included {
                 if msg.len() < TLS_LEN_FIELD_LEN + 1 {
                     return Err(TlsError::MessageShort);
@@ -120,7 +120,7 @@ where
         {
             self.finished = true;
 
-            if return_on_finish {
+            if is_auth {
                 return Ok(EapCommonResult::Finished);
             }
         }

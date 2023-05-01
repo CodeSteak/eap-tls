@@ -21,6 +21,7 @@ pub use common::EapStepResult as PeerStepResult;
 pub use common::EapStepStatus as PeerStepStatus;
 pub use common::EapWrapper;
 
+pub type MD5Peer = Peer<(PeerIdentityMethod, PeerMD5ChallengeMethod)>;
 impl Peer<(PeerIdentityMethod, PeerMD5ChallengeMethod)> {
     pub fn new_password(identity: &str, password: &str) -> Self {
         Self {
@@ -38,6 +39,10 @@ impl Peer<(PeerIdentityMethod, PeerMD5ChallengeMethod)> {
         }
     }
 }
+
+#[cfg(feature = "tls")]
+pub type TlsPeer = Peer<(PeerIdentityMethod, crate::eap_rustls::PeerTlsMethod)>;
+
 
 #[cfg(feature = "tls")]
 impl Peer<(PeerIdentityMethod, crate::eap_rustls::PeerTlsMethod)> {

@@ -1,5 +1,4 @@
 mod authenticator;
-
 pub use authenticator::*;
 
 mod peer;
@@ -117,7 +116,7 @@ mod tests {
 
         dbg!(success, tries);
 
-        assert!(success as f32 > tries as f32 * 0.25);
+        assert!(success as f32 > tries as f32 * 0.30);
     }
 
     #[test]

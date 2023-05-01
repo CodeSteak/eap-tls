@@ -253,7 +253,7 @@ mod tests {
     }
 
     #[test]
-    fn conversation() {
+    fn test_switching() {
         let mut env = DefaultEnvironment::new();
 
         let mut layer = PeerLayer::new()

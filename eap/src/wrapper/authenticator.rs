@@ -12,12 +12,14 @@ pub use common::EapStepResult as AuthenticatorStepResult;
 pub use common::EapStepStatus as AuthenticatorStepStatus;
 pub use common::EapWrapper;
 
+
 pub struct Authenticator<I> {
     env: DefaultEnvironment,
     inner: EapLayer<AuthLayer<I>>,
     buffer: Vec<u8>,
 }
 
+pub type MD5Authenticator = Authenticator<(AuthIdentityMethod, AuthMD5ChallengeMethod)>;
 impl Authenticator<(AuthIdentityMethod, AuthMD5ChallengeMethod)> {
     pub fn new_password(password: &str) -> Self {
         Self {
@@ -31,6 +33,9 @@ impl Authenticator<(AuthIdentityMethod, AuthMD5ChallengeMethod)> {
         }
     }
 }
+
+#[cfg(feature = "tls")]
+pub type TlsAuthenticator = Authenticator<(AuthIdentityMethod, crate::eap_rustls::AuthTlsMethod)>;
 
 #[cfg(feature = "tls")]
 impl Authenticator<(AuthIdentityMethod, crate::eap_rustls::AuthTlsMethod)> {
